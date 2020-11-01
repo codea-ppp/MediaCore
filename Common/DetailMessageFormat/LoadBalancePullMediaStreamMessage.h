@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -25,7 +26,7 @@ namespace MediaCoreMessageFormat
 
 	void InitLoadBalancePullMediaStreamMessage(LoadBalancePullMediaStreamMessage* message)
 	{
-		message->type					= 0x31;
+		message->type					= MSGTYPE_LOADBALANCEPULLMEDIASTREAM;
 		message->length					= 0x00;
 		message->tid					= 0x00;
 		message->ssrc					= 0x00;
@@ -160,6 +161,42 @@ namespace MediaCoreMessageFormat
 		delete[] message->video_name;
 		message->video_name = nullptr;
 
+		return 0;
+	}
+
+	int FullFromNet(LoadBalancePullMediaStreamMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		if (message->length <= 8)
+		{
+			dzlog_error("message->length <= 8");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		int once = recv(conn.sockfd, &message->ssrc, 8, MSG_WAITALL);
+		if (once != 8)
+		{
+			dzlog_error("not enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		dzlog_info("video name length == %d", message->video_name_length);
+
+		message->video_name = new uint8_t[message->video_name_length];
+		once = recv(conn.sockfd, &message->video_name, message->video_name_length, MSG_WAITALL);
+		if (once != message->video_name_length)
+		{
+			dzlog_error("not enough data");
+			delete[] message->video_name;
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		dzlog_info("pulling media stream of %s", message->video_name);
 		return 0;
 	}
 }

@@ -25,7 +25,7 @@ namespace MediaCoreMessageFormat
 
 	void InitStreamMessage(StreamMessage* message)
 	{
-		message->type		= 0x35;
+		message->type		= MSGTYPE_STREAMFRAME;
 		message->length		= 0x00;
 		message->tid		= 0x00;
 		message->y_length	= 0x00;
@@ -205,6 +205,54 @@ namespace MediaCoreMessageFormat
 		{
 			delete[] message->v;
 			message->v = nullptr;
+		}
+
+		return 0;
+	}
+
+	int FullFromNet(StreamMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		uint32_t once = recv(conn.sockfd, &message->y_length, 12, MSG_WAITALL);
+		if (once != 12)
+		{
+			dzlog_error("no enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		dzlog_info("get frame (y, u, v) == (%d, %d, %d)", message->y_length, message->u_length, message->v_length);
+
+		message->y = new uint8_t[message->y_length];
+		message->u = new uint8_t[message->u_length];
+		message->v = new uint8_t[message->v_length];
+
+		once = recv(conn.sockfd, message->y, message->y_length, MSG_WAITALL);
+		if (once != message->y_length)
+		{
+			dzlog_error("not enough y data");
+			ClearStreamMessage(message);
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		once = recv(conn.sockfd, message->u, message->u_length, MSG_WAITALL);
+		if (once != message->u_length)
+		{
+			dzlog_error("not enough u data");
+			ClearStreamMessage(message);
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		once = recv(conn.sockfd, message->v, message->v_length, MSG_WAITALL);
+		if (once != message->v_length)
+		{
+			dzlog_error("not enough v data");
+			ClearStreamMessage(message);
+			return NEED_2_CLOSE_SOCKET_ERROR;
 		}
 
 		return 0;

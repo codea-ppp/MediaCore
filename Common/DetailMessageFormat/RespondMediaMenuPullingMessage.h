@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -27,12 +28,13 @@ namespace MediaCoreMessageFormat
 
 	void InitRespondMediaMenuPullMessage(RespondMediaMenuPullMessage* message)
 	{
-		message->type	= 0x21;
+		message->type	= MSGTYPE_RESPONDMEDIAMENU;
 		message->length = 0x00;
 		message->tid	= 0x00;
 
 		message->MediaMetaResourse = nullptr;
 	}
+
 
 	bool SendRespondMediaMenuPullMessage(int Socket, const RespondMediaMenuPullMessage* message)
 	{
@@ -161,6 +163,57 @@ namespace MediaCoreMessageFormat
 
 		delete[] message->MediaMetaResourse;
 		message->MediaMetaResourse = nullptr;
+
+		return 0;
+	}
+	
+	int FullFromNet(RespondMediaMenuPullMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		if (message->length < 0)
+		{
+			dzlog_error("message->length < 0");
+			return NEED_2_CLOSE_SOCKET_ERROR;	
+		}
+
+		message->MediaMetaResourse = new MediaMeta[message->length];
+
+		for (uint32_t i = 0; i < message->length; ++i)
+		{
+			uint32_t video_length;
+			uint32_t once = recv(conn.sockfd, &video_length, sizeof(video_length), MSG_WAITALL);
+			if (once != sizeof(video_length))
+			{
+				dzlog_error("not enougth data");
+				ClearRespondMediaMenuPullMessage(message);
+				return NEED_2_CLOSE_SOCKET_ERROR;
+			}
+
+			if (video_length <= 0)
+			{
+				dzlog_error("video_length <= 0");
+				ClearRespondMediaMenuPullMessage(message);
+				return NEED_2_CLOSE_SOCKET_ERROR;
+			}
+
+			dzlog_info("new media meta %d", i);
+
+			message->MediaMetaResourse[i].VideoNameLength = video_length;
+			message->MediaMetaResourse[i].VideoName = new uint8_t[video_length];
+
+			once = recv(conn.sockfd, message->MediaMetaResourse[i].VideoName, video_length, MSG_WAITALL);
+			if (once != video_length)
+			{
+				dzlog_error("not enough data");
+				ClearRespondMediaMenuPullMessage(message);
+				return NEED_2_CLOSE_SOCKET_ERROR;
+			}
+		}
 
 		return 0;
 	}

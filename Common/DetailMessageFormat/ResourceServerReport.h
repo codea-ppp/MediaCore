@@ -18,7 +18,7 @@ namespace MediaCoreMessageFormat
 
 	void InitResourceServerReportMessage(ResourceServerReportMessage* message)
 	{
-		message->type	= 0x37;
+		message->type	= MSGTYPE_RESOURCESERVERREPORT;
 		message->length	= 0x01;
 		message->tid	= 0x00;
 		message->error	= 0x00;
@@ -75,6 +75,24 @@ namespace MediaCoreMessageFormat
 		}
 
 		message->error = error;
+
+		return 0;
+	}
+
+	int FullFromNet(ResourceServerReportMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		int once = recv(conn.sockfd, &message->error, 1, MSG_WAITALL);
+		if (once != 1)
+		{
+			dzlog_error("not enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
 
 		return 0;
 	}

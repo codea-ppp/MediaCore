@@ -18,7 +18,7 @@ namespace MediaCoreMessageFormat
 
 	void InitStopStreamMessage(StopStreamMessage* message)
 	{
-		message->type	= 0x36;
+		message->type	= MSGTYPE_STOPSTREAM;
 		message->length	= 0x04;
 		message->tid	= 0x00;
 		message->ssrc	= 0x00;
@@ -75,6 +75,24 @@ namespace MediaCoreMessageFormat
 		}
 
 		message->ssrc = ssrc;
+
+		return 0;
+	}
+
+	int FullFromNet(StopStreamMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		int once = recv(conn.sockfd, &message->ssrc, 4, MSG_WAITALL);
+		if (once != 4)
+		{
+			dzlog_error("not enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
 
 		return 0;
 	}

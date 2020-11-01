@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 #include "RespondLoadBalancePullingMessage.h"
 
 namespace MediaCoreMessageFormat
@@ -19,7 +20,7 @@ namespace MediaCoreMessageFormat
 	// 所以只有初始化函数重新定义了
 	void InitPushLoadBalanceMessage(PushLoadBalanceMessage* message)
 	{
-		message->type	= 0x04;
+		message->type	= MSGTYPE_PUSHLOADBANLANCE;
 		message->length = 0x00;
 		message->tid	= 0x00;
 		message->ip		= nullptr;

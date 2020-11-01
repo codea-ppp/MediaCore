@@ -9,6 +9,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -24,7 +25,7 @@ namespace MediaCoreMessageFormat
 
 	void InitClientPullMediaStreamMessage(ClientPullMediaStreamMessage* message)
 	{
-		message->type				= 0x30;
+		message->type				= MSGTYPE_CLIENTPULLMEDIASTREAM;
 		message->length				= 0x00;
 		message->tid				= 0x00;
 		message->receive_port		= 0x00;
@@ -96,6 +97,45 @@ namespace MediaCoreMessageFormat
 
 		dzlog_info("success for socket: %d", Socket);
 		return true;
+	}
+
+	int FullFromNet(ClientPullMediaStreamMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		if (message->length <= 4)
+		{
+			dzlog_error("message->length <= 4");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		int once = recv(conn.sockfd, &message->receive_port, 4, MSG_WAITALL);
+		if (once != 4)
+		{
+			dzlog_error("not enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		if (message->video_name_length < 0)
+		{
+			dzlog_error("message->video_name_length < 0");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		message->video_name = new uint8_t[message->video_name_length];
+		once = recv(conn.sockfd, message->video_name, message->video_name_length, MSG_WAITALL);
+		if (once != message->video_name_length)
+		{
+			dzlog_error("not enough data");
+			delete[] message->video_name;
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		return 0;
 	}
 
 	int SetClientPullMediaStreamData(ClientPullMediaStreamMessage* message, const std::string& media2play, uint16_t receive_port)

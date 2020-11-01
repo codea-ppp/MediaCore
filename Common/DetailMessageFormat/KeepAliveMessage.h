@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -20,7 +21,7 @@ namespace MediaCoreMessageFormat
 
 	void InitKeepAliveMessage(KeepAliveMessage* message)
 	{
-		message->type	= 0x01;
+		message->type	= MSGTYPE_KEEPALIVE;
 		message->length = 0x05;
 		message->tid	= 0x00;
 		message->sid	= 0x00;
@@ -57,6 +58,24 @@ namespace MediaCoreMessageFormat
 
 		dzlog_info("success for socket: %d", Socket);
 		return true;
+	}
+
+	int FullFromNet(KeepAliveMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		int once = recv(conn.sockfd, &message->sid, 5, MSG_WAITALL);
+		if (once != 5)
+		{
+			dzlog_error("recv from socket %d failed, errno: %d", conn.sockfd, errno);
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		return 0;
 	}
 
 	int SetKeepAliveData(KeepAliveMessage* message, uint32_t sid, uint8_t count)

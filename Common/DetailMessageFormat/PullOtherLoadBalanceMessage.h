@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -17,7 +18,7 @@ namespace MediaCoreMessageFormat
 
 	void InitPullOtherLoadBalanceMessage(PullOtherLoadBalanceMessage* message)
 	{
-		message->type	= 0x02;
+		message->type	= MSGTYPE_PULLOTHERLOADBALANCE;
 		message->length = 0x00;
 		message->tid	= 0x00;
 	}

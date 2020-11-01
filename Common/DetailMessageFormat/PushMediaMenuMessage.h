@@ -1,5 +1,5 @@
-#ifndef PUSH_LOADBALANCE_MESSAGE_H_
-#define PUSH_LOADBALANCE_MESSAGE_H_
+#ifndef PUSH_MEDIA_MENU_MESSAGE_H_ 
+#define PUSH_MEDIA_MENU_MESSAGE_H_ 
 
 #include <vector>
 #include <zlog.h>
@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 #include "RespondMediaMenuPullingMessage.h"
 
 namespace MediaCoreMessageFormat
@@ -19,11 +20,9 @@ namespace MediaCoreMessageFormat
 	// 所以只有初始化函数重新定义了
 	void InitPushLoadBalanceMessage(PushMediaMenuMessage* message)
 	{
-		message->type	= 0x22;
+		message->type	= MSGTYPE_PUSHMEDIAMENU;
 		message->length = 0x00;
 		message->tid	= 0x00;
-		message->ip		= nullptr;
-		message->port	= nullptr;
 	}
 
 	// 这里是在创建函数的别名, 相当于类型的 typedef

@@ -18,7 +18,7 @@ namespace MediaCoreMessageFormat
 
 	void InitResourceServerRespondMediaPullMessage(ResourceServerRespondMediaPullMessage* message)
 	{
-		message->type		= 0x32;
+		message->type		= MSGTYPE_RESOURCERESPONDMEDIAPULL;
 		message->length		= 0x02;
 		message->tid		= 0x00;
 		message->send_port	= 0x00;
@@ -75,6 +75,30 @@ namespace MediaCoreMessageFormat
 		}
 
 		message->send_port = send_port;
+
+		return 0;
+	}
+
+	int FullFromNet(ResourceServerRespondMediaPullMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		if (message->length != 2)
+		{
+			dzlog_error("message->length != 6");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		int once = recv(conn.sockfd, &message->send_port, 2, MSG_WAITALL);
+		if (once != 2)
+		{
+			dzlog_error("not enough data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
 
 		return 0;
 	}

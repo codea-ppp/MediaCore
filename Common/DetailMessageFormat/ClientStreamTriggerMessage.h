@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -18,7 +19,7 @@ namespace MediaCoreMessageFormat
 
 	void InitClientStreamTriggerMessage(ClientStreamTriggerMessage* message)
 	{
-		message->type	= 0x34;
+		message->type	= MSGTYPE_CLIENTSTREAMTRIGGER;
 		message->length	= 0x04;
 		message->tid	= 0x00;
 		message->ssrc	= 0x00;
@@ -75,6 +76,24 @@ namespace MediaCoreMessageFormat
 		}
 
 		message->ssrc = ssrc;
+
+		return 0;
+	}
+
+	int FullFromNet(ClientStreamTriggerMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		int once = recv(conn.sockfd, &message->ssrc, 4, MSG_WAITALL);
+		if (once != 4)
+		{
+			dzlog_error("no enought data");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
 
 		return 0;
 	}

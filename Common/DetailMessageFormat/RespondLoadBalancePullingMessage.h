@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -22,7 +23,7 @@ namespace MediaCoreMessageFormat
 
 	void InitRespondLoadBalancePullMessage(RespondLoadBalancePullMessage* message)
 	{
-		message->type	= 0x03;
+		message->type	= MSGTYPE_RESPONDLOADBALANCEPULL;
 		message->length = 0x00;
 		message->tid	= 0x00;
 		message->ip		= nullptr;
@@ -108,6 +109,57 @@ namespace MediaCoreMessageFormat
 
 		dzlog_info("success for socket: %d", Socket);
 		return true;
+	}
+
+	int FullFromNet(RespondLoadBalancePullMessage* message, const connection& conn)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return -1;
+		}
+
+		if (message->length < 0)
+		{
+			dzlog_error("message->length < 0");
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		int ip_length	= message->length * 4;
+		int port_length = message->length * 2;
+
+		message->ip		= new uint32_t[message->length / 6];
+		message->port	= new uint16_t[message->length / 6];
+
+		int once = recv(conn.sockfd, message->ip, ip_length, MSG_WAITALL);
+		if (once != ip_length)
+		{
+			dzlog_error("no enough data");
+
+			delete[] message->ip;
+			delete[] message->port;
+
+			message->ip		= nullptr;
+			message->port	= nullptr;
+
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		once = recv(conn.sockfd, message->port, port_length, MSG_WAITALL);
+		if (once != port_length)
+		{
+			dzlog_error("no enough data");
+
+			delete[] message->ip;
+			delete[] message->port;
+
+			message->ip		= nullptr;
+			message->port	= nullptr;
+
+			return NEED_2_CLOSE_SOCKET_ERROR;
+		}
+
+		return 0;
 	}
 
 	int SetOtherLoadBalanceData(RespondLoadBalancePullMessage* message, const std::vector<uint32_t>& IPs, const std::vector<uint16_t>& Ports)

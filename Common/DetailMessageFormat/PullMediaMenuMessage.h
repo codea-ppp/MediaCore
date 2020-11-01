@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include "MessageType.h"
 
 namespace MediaCoreMessageFormat
 {
@@ -17,7 +18,7 @@ namespace MediaCoreMessageFormat
 
 	void InitPullMediaMenuMessage(PullMediaMenuMessage* message)
 	{
-		message->type	= 0x20;
+		message->type	= MSGTYPE_PULLMEDIAMENU;
 		message->length = 0x00;
 		message->tid	= 0x00;
 	}
