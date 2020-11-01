@@ -28,6 +28,17 @@ namespace MediaCoreMessageFormat
 		message->count	= 0x00;
 	}
 
+	void PrintMessage(KeepAliveMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("KeepAliveMessage(type: [%d], length: [%d], tid: [%d], sid: [%d], count: [%d])", message->type, message->length, message->tid, message->sid, message->count);
+	}
+
 	bool SendKeepAliveMessage(int Socket, const KeepAliveMessage* message)
 	{
 		if (Socket < 0) 

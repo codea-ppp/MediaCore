@@ -33,6 +33,17 @@ namespace MediaCoreMessageFormat
 		message->video_name			= nullptr;
 	}
 
+	void PrintMessage(ClientPullMediaStreamMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("ClientPullMediaStreamMessage(type: [%d], length: [%d], tid: [%d], receive port: [%d], video name: [%s])", message->type, message->length, message->tid, message->receive_port, (char*)message->video_name);
+	}
+
 	bool SendClientPullMediaStreamMessage(int Socket, const ClientPullMediaStreamMessage* message)
 	{
 		{

@@ -35,6 +35,21 @@ namespace MediaCoreMessageFormat
 		message->MediaMetaResourse = nullptr;
 	}
 
+	void PrintMessage(RespondMediaMenuPullMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("RespondMediaMenuPullMessage(type: [%d], length: [%d], tid: [%d])", message->type, message->length, message->tid);
+
+		for (uint32_t i = 0; i < message->length; ++i)
+		{
+			dzlog_info("video resource %s", message->MediaMetaResourse[i].VideoName);
+		}
+	}
 
 	bool SendRespondMediaMenuPullMessage(int Socket, const RespondMediaMenuPullMessage* message)
 	{
@@ -75,7 +90,17 @@ namespace MediaCoreMessageFormat
 		for (uint32_t i = 0; i < message->length; ++i)
 		{
 			once = 0;
+
 			uint32_t name_length = message->MediaMetaResourse[i].VideoNameLength;
+			for (uint32_t j = 0; j < 4; j += once)
+			{
+				once = send(Socket, (const uint8_t*)&name_length + j, 4 - j, MSG_CONFIRM);
+				if (once == -1)
+				{
+					dzlog_error("error, errno: %d", errno);
+					return false;
+				}
+			}
 
 			for (uint32_t j = 0; j < name_length; j += once)
 			{
@@ -181,13 +206,14 @@ namespace MediaCoreMessageFormat
 			return NEED_2_CLOSE_SOCKET_ERROR;	
 		}
 
+		dzlog_info("get %d media", message->length);
 		message->MediaMetaResourse = new MediaMeta[message->length];
 
 		for (uint32_t i = 0; i < message->length; ++i)
 		{
 			uint32_t video_length;
-			uint32_t once = recv(conn.sockfd, &video_length, sizeof(video_length), MSG_WAITALL);
-			if (once != sizeof(video_length))
+			uint32_t once = recv(conn.sockfd, &video_length, 4, MSG_WAITALL);
+			if (once != 4)
 			{
 				dzlog_error("not enougth data");
 				ClearRespondMediaMenuPullMessage(message);
@@ -201,7 +227,7 @@ namespace MediaCoreMessageFormat
 				return NEED_2_CLOSE_SOCKET_ERROR;
 			}
 
-			dzlog_info("new media meta %d", i);
+			dzlog_info("new media meta %d of length %d", i, video_length);
 
 			message->MediaMetaResourse[i].VideoNameLength = video_length;
 			message->MediaMetaResourse[i].VideoName = new uint8_t[video_length];

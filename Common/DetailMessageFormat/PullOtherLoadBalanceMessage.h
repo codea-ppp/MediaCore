@@ -23,6 +23,17 @@ namespace MediaCoreMessageFormat
 		message->tid	= 0x00;
 	}
 
+	void PrintMessage(PullOtherLoadBalanceMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("PullOtherLoadBalanceMessage(type: [%d], length: [%d], tid: [%d])", message->type, message->length, message->tid);
+	}
+
 	bool SendPullOtherLoadBalanceMessage(int Socket, const PullOtherLoadBalanceMessage* message)
 	{
 		{

@@ -8,7 +8,7 @@
 class NetMessageListener
 {
 public:
-	static NetMessageListener* const GetInstance() { return &instance; };
+	static NetMessageListener* const GetInstance();
 
 	int listening(uint16_t port);
 	void SetCallback(void (*Message2Go)(const connection& conn, void* MessageHeadPtr));
@@ -19,8 +19,6 @@ private:
 	void* construct_message(const connection& conn, uint8_t* buffer);
 
 private:
-	static NetMessageListener instance;
-
 	uint16_t _port;
 	int	_status;
 

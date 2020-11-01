@@ -24,6 +24,17 @@ namespace MediaCoreMessageFormat
 		message->ssrc	= 0x00;
 	}
 
+	void PrintMessage(StopStreamMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("StopStreamMessage(type: [%d], length: [%d], tid: [%d], ssrc: [%d])", message->type, message->length, message->tid, message->ssrc);
+	}
+
 	bool SendStopStreamMessage(int Socket, const StopStreamMessage* message)
 	{
 		{

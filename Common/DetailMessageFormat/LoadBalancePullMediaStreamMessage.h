@@ -35,6 +35,17 @@ namespace MediaCoreMessageFormat
 		message->video_name				= nullptr;
 	}
 
+	void PrintMessage(LoadBalancePullMediaStreamMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("LoadBalancePullMediaStreamMessage(type: [%d], length: [%d], tid: [%d], ssrc: [%d], client receive port: [%d], video name: [%s])", message->type, message->length, message->tid, message->ssrc, message->client_receive_port, (char*)message->video_name);
+	}
+
 	bool SendLoadBalancePullMediaStreamMessage(int Socket, const LoadBalancePullMediaStreamMessage* message)
 	{
 		{
@@ -178,6 +189,7 @@ namespace MediaCoreMessageFormat
 			return NEED_2_CLOSE_SOCKET_ERROR;
 		}
 
+		// 这里读 8 字节是把之后的字段也读了
 		int once = recv(conn.sockfd, &message->ssrc, 8, MSG_WAITALL);
 		if (once != 8)
 		{
@@ -188,7 +200,7 @@ namespace MediaCoreMessageFormat
 		dzlog_info("video name length == %d", message->video_name_length);
 
 		message->video_name = new uint8_t[message->video_name_length];
-		once = recv(conn.sockfd, &message->video_name, message->video_name_length, MSG_WAITALL);
+		once = recv(conn.sockfd, message->video_name, message->video_name_length, MSG_WAITALL);
 		if (once != message->video_name_length)
 		{
 			dzlog_error("not enough data");

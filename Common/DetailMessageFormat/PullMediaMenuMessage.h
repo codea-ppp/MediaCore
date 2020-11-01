@@ -16,6 +16,17 @@ namespace MediaCoreMessageFormat
 		uint32_t	tid;
 	};
 
+	void PrintMessage(PullMediaMenuMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("PullMediaMenuMessage(type: [%d], length: [%d], tid: [%d])", message->type, message->length, message->tid);
+	}
+
 	void InitPullMediaMenuMessage(PullMediaMenuMessage* message)
 	{
 		message->type	= MSGTYPE_PULLMEDIAMENU;

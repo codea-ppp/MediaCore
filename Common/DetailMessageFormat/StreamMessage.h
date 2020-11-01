@@ -36,6 +36,17 @@ namespace MediaCoreMessageFormat
 		message->v			= nullptr;
 	}
 
+	void PrintMessage(StreamMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("StreamMessage(type: [%d], length: [%d], tid: [%d], \ny: %s\nu: %s\nv: %s)", message->type, message->length, message->tid, (char*)message->y, (char*)message->u, (char*)message->v);
+	}
+
 	bool SendStreamMessage(int Socket, const StreamMessage* message)
 	{
 		{
@@ -175,6 +186,10 @@ namespace MediaCoreMessageFormat
 		memcpy(message->y, value[0], length[0]);
 		memcpy(message->u, value[1], length[1]);
 		memcpy(message->v, value[2], length[2]);
+
+		message->y_length = length[0];
+		message->u_length = length[1];
+		message->v_length = length[2];
 
 		message->length = 12 + length[0] + length[1] + length[2]; 
 

@@ -25,6 +25,17 @@ namespace MediaCoreMessageFormat
 		message->ssrc	= 0x00;
 	}
 
+	void PrintMessage(ClientStreamTriggerMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("ClientStreamTriggerMessage(type: [%d], length: [%d], tid: [%d], ssrc: [%d])", message->type, message->length, message->tid, message->ssrc);
+	}
+
 	bool SendClientStreamTriggerMessage(int Socket, const ClientStreamTriggerMessage* message)
 	{
 		{

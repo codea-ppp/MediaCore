@@ -27,6 +27,12 @@ NetMessageListener::~NetMessageListener()
 	std::this_thread::sleep_for(std::chrono::seconds(8));
 }
 
+NetMessageListener* const NetMessageListener::GetInstance()
+{
+	static NetMessageListener instance;
+	return &instance; 
+}
+
 void NetMessageListener::SetCallback(void (*Message2Go)(const connection& conn, void* ptr))
 {
 	_Message2Go = Message2Go;
@@ -317,10 +323,12 @@ void NetMessageListener::_rolling()
 	static uint8_t buffer[12];
 	memset(buffer, 0, 12);
 
-	bool is_data;
+	bool is_data = false;
 
 	while (_status)
 	{
+		if (!is_data) std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
 		int size = pending_sockfds.size();
 		if (size)
 		{
@@ -340,13 +348,17 @@ void NetMessageListener::_rolling()
 
 		for (std::vector<connection>::iterator i = rolling_sockfds.begin(); i != rolling_sockfds.end(); ++i) 
 		{
+			dzlog_info("rolling for %ld sockets", rolling_sockfds.size());
+
 			int temp = recv(i->sockfd, buffer, 12, MSG_WAITALL);
 			if (temp == -1 || temp != 12)
 			{
 				dzlog_error("recv failed when reading socket %d", i->sockfd);
 
+				dzlog_info("close socket %d", i->sockfd);
 				close(i->sockfd);
 				rolling_sockfds.erase(i);
+				break;
 			}
 
 			void* message = construct_message(*i, buffer);
@@ -354,15 +366,15 @@ void NetMessageListener::_rolling()
 			{
 				dzlog_error("message == nullptr");
 
+				dzlog_info("close socket %d", i->sockfd);
 				close(i->sockfd);
 				rolling_sockfds.erase(i);
+				break;
 			}
 
 			_Message2Go(*i, message);
 			is_data = true;
 		}
-
-		if (!is_data) std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	}
 }
 

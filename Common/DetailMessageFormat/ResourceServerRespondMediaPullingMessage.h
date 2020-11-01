@@ -24,6 +24,17 @@ namespace MediaCoreMessageFormat
 		message->send_port	= 0x00;
 	}
 
+	void PrintMessage(ResourceServerRespondMediaPullMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("ResourceServerRespondMediaPullMessage(type: [%d], length: [%d], tid: [%d], send port: [%d])", message->type, message->length, message->tid, message->send_port);
+	}
+
 	bool SendResourceServerRespondMediaPullMessage(int Socket, const ResourceServerRespondMediaPullMessage* message)
 	{
 		{

@@ -30,6 +30,32 @@ namespace MediaCoreMessageFormat
 		message->port	= nullptr;
 	}
 
+	void PrintMessage(RespondLoadBalancePullMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		if (message->length % 6 != 0)
+		{
+			dzlog_error("message->length mod 5 != 0");
+			return;
+		}
+
+		dzlog_info("RespondLoadBalancePullMessage(type: [%d], length: [%d], tid: [%d])", message->type, message->length, message->tid);
+		
+		static char ipAddr[16];
+		for (uint32_t i = 0; i < message->length / 6; ++i)
+		{
+			memset(ipAddr, 0, 16);
+			snprintf(ipAddr, sizeof(ipAddr), "%u.%u.%u.%u", (message->ip[i] & 0x000000ff), (message->ip[i] & 0x0000ff00) >> 8, (message->ip[i] & 0x00ff0000) >> 16, (message->ip[i] & 0xff000000) >> 24);
+
+			dzlog_info("get loadbalance %d@%s:%d", i, ipAddr, ntohs(message->port[i]));
+		}
+	}
+
 	bool SendRespondLoadBalancePullMessage(int Socket, const RespondLoadBalancePullMessage* message)
 	{
 		{
@@ -77,10 +103,12 @@ namespace MediaCoreMessageFormat
 				return false;
 			}
 		}
-
+		
 		// message->length = n * (sizeof(ip) + sizeof(port))
 		int port_length	= message->length / 3;
 		int ip_length	= message->length - port_length;
+
+		dzlog_info("message->length %d which ip %d bytes port %d bytes", message->length, ip_length, port_length);
 
 		once = 0;
 		for (int i = 0; i != ip_length; i += once)
@@ -125,11 +153,13 @@ namespace MediaCoreMessageFormat
 			return NEED_2_CLOSE_SOCKET_ERROR;
 		}
 
-		int ip_length	= message->length * 4;
-		int port_length = message->length * 2;
+		int port_length	= message->length / 3;
+		int ip_length	= message->length - port_length;
 
 		message->ip		= new uint32_t[message->length / 6];
 		message->port	= new uint16_t[message->length / 6];
+
+		dzlog_info("message->length %d which ip length %d, port length %d", message->length, ip_length, port_length);
 
 		int once = recv(conn.sockfd, message->ip, ip_length, MSG_WAITALL);
 		if (once != ip_length)
@@ -191,15 +221,16 @@ namespace MediaCoreMessageFormat
 		}
 
 		int size = IPs.size();
-
 		message->length = size * 6;
 
-		// 标准规定了 vector 的内部是连续存储且 &std::vector[0] 就是内部的 buffer 首地址
-		message->ip	= new uint32_t[size];
-		memcpy(message->ip, &IPs[0], size);
+		message->ip		= new uint32_t[size];
+		message->port	= new uint16_t[size];
 
-		message->port = new uint16_t[size];
-		memcpy(message->port, &Ports[0], size);
+		for (int i = 0; i < size; ++i)
+		{
+			message->ip[i]		= IPs[i];
+			message->port[i]	= Ports[i];
+		}
 
 		return 0;
 	}
@@ -207,13 +238,13 @@ namespace MediaCoreMessageFormat
 	int ClearRespondLoadBalancePullMessage(RespondLoadBalancePullMessage* message)
 	{
 		{
-			if (message->ip != nullptr)
+			if (message->ip == nullptr)
 			{
 				dzlog_error("message->ip == nullptr");
 				return -1;
 			}
 
-			if (message->port != nullptr)
+			if (message->port == nullptr)
 			{
 				dzlog_error("message->port == nullptr");
 				return -2;

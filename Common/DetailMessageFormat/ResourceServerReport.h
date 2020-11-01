@@ -24,6 +24,17 @@ namespace MediaCoreMessageFormat
 		message->error	= 0x00;
 	}
 
+	void PrintMessage(ResourceServerReportMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("ResourceServerReportMessage(type: [%d], length: [%d], tid: [%d], erro: [%d])", message->type, message->length, message->tid, message->error);
+	}
+
 	bool SendResourceServerReportMessage(int Socket, const ResourceServerReportMessage* message)
 	{
 		{

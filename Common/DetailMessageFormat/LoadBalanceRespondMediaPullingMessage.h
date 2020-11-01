@@ -27,6 +27,17 @@ namespace MediaCoreMessageFormat
 		message->send_port	= 0x00;
 	}
 
+	void PrintMessage(LoadBalanceRespondMediaPullMessage* message)
+	{
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+			return;
+		}
+
+		dzlog_info("LoadBalanceRespondMediaPullMessage(type: [%d], length: [%d], tid: [%d], ssrc: [%d], send port: [%d])", message->type, message->length, message->tid, message->ssrc, message->send_port);
+	}
+
 	bool SendLoadBalanceRespondMediaPullMessage(int Socket, const LoadBalanceRespondMediaPullMessage* message)
 	{
 		{
