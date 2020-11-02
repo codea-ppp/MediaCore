@@ -55,14 +55,7 @@ int NetMessageListener::listening(uint16_t port)
 	_status = 1;
 	_port	= port;
 
-	std::thread* ptr = new std::thread(&NetMessageListener::_listening, this);
-	ptr->detach();
-	delete ptr;
-
-	std::thread* ptr2 = new std::thread(&NetMessageListener::_rolling, this);
-	ptr2->detach();
-	delete ptr2;
-
+	ThreadpoolInstance::GetInstance()->schedule(std::bind(&NetMessageListener::_listening,	this));
 	return 0;
 }
 
@@ -124,10 +117,7 @@ void NetMessageListener::_listening()
 
 		dzlog_info("accept a socket: %d@%s:%d", conn.sockfd, conn.ip.c_str(), conn.port);
 
-		{
-			std::lock_guard<std::mutex> lk(pending_lock);
-			pending_sockfds.push_back(conn);
-		}
+		ThreadpoolInstance::GetInstance()->schedule(std::bind(&NetMessageListener::_rolling, this, conn));
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
@@ -141,6 +131,8 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 	uint32_t length	= ((uint32_t*)buffer)[1];
 	uint32_t tid	= ((uint32_t*)buffer)[2];
 
+	dzlog_info("get message head %d, %d, %d", type, length, tid);
+
 	switch (type)
 	{
 	case MSGTYPE_KEEPALIVE: 
@@ -149,7 +141,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -168,7 +164,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -179,7 +179,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -198,7 +202,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -209,7 +217,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -220,7 +232,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -231,7 +247,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -242,7 +262,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -253,7 +277,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -264,7 +292,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -275,7 +307,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 		
 		return (void*)message;
 	}
@@ -286,7 +322,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -297,7 +337,11 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 
 		SetHead(message, type, length, tid);
 		if (FullFromNet(message, conn) < 0)
+		{
+			dzlog_error("full messsage failed");
+			delete message;
 			return nullptr;
+		}
 
 		return (void*)message;
 	}
@@ -306,7 +350,7 @@ void* NetMessageListener::construct_message(const connection& conn, uint8_t* buf
 	}
 }
 
-void NetMessageListener::_rolling()
+void NetMessageListener::_rolling(const connection conn)
 {
 	if (!_status)
 	{
@@ -328,53 +372,39 @@ void NetMessageListener::_rolling()
 	while (_status)
 	{
 		if (!is_data) std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
-		int size = pending_sockfds.size();
-		if (size)
-		{
-			dzlog_info("there are %d socket to add", size);
-			std::lock_guard<std::mutex> lk(pending_lock);
-
-			for (std::vector<connection>::iterator i = pending_sockfds.begin(); i != pending_sockfds.end(); ++i) 
-			{
-				rolling_sockfds.push_back(*i);
-				dzlog_info("%d@%s:%d start to rolling", i->sockfd, i->ip.c_str(), i->port);
-			}
-			
-			pending_sockfds.clear();
-		}
+		dzlog_info("rolling for socket %d", conn.sockfd);
 
 		is_data = false;
 
-		for (std::vector<connection>::iterator i = rolling_sockfds.begin(); i != rolling_sockfds.end(); ++i) 
+		int temp = recv(conn.sockfd, buffer, 12, MSG_WAITALL);
+		if (temp == -1 || temp != 12)
 		{
-			dzlog_info("rolling for %ld sockets", rolling_sockfds.size());
+			dzlog_error("recv failed when reading socket %d, get %d, errno: %d", conn.sockfd, temp, errno);
 
-			int temp = recv(i->sockfd, buffer, 12, MSG_WAITALL);
-			if (temp == -1 || temp != 12)
-			{
-				dzlog_error("recv failed when reading socket %d", i->sockfd);
-
-				dzlog_info("close socket %d", i->sockfd);
-				close(i->sockfd);
-				rolling_sockfds.erase(i);
-				break;
-			}
-
-			void* message = construct_message(*i, buffer);
-			if (message == nullptr)
-			{
-				dzlog_error("message == nullptr");
-
-				dzlog_info("close socket %d", i->sockfd);
-				close(i->sockfd);
-				rolling_sockfds.erase(i);
-				break;
-			}
-
-			_Message2Go(*i, message);
-			is_data = true;
+			dzlog_info("close socket %d", conn.sockfd);
+			close(conn.sockfd);
+			return;
 		}
+
+		dzlog_info("get mesage head: %d, %d, %d from %d", ((uint32_t*)buffer)[0], ((uint32_t*)buffer)[1], ((uint32_t*)buffer)[2], conn.sockfd);
+
+		void* message = construct_message(conn, buffer);
+		if (message == nullptr)
+		{
+			dzlog_error("message == nullptr");
+
+			dzlog_info("close socket %d", conn.sockfd);
+			close(conn.sockfd);
+			return;
+		}
+
+		_Message2Go(conn, message);
+		is_data = true;
+
+		dzlog_info("rolling for socket %d end", conn.sockfd);
 	}
+
+	dzlog_info("close socket %d", conn.sockfd);
+	close(conn.sockfd);
 }
 

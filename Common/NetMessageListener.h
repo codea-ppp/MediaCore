@@ -4,6 +4,7 @@
 #include <mutex>
 #include "MessageType.h"
 #include "MessageFormat.h"
+#include "ThreadpoolInstance.h"
 
 class NetMessageListener
 {
@@ -15,7 +16,7 @@ public:
 
 private:
 	void _listening();
-	void _rolling();
+	void _rolling(const connection conn);
 	void* construct_message(const connection& conn, uint8_t* buffer);
 
 private:
@@ -23,10 +24,6 @@ private:
 	int	_status;
 
 	void (*_Message2Go)(const connection& conn, void* ptr);
-
-	std::mutex pending_lock;
-	std::vector<connection> pending_sockfds;
-	std::vector<connection> rolling_sockfds;
 
 	NetMessageListener();
 	~NetMessageListener();
