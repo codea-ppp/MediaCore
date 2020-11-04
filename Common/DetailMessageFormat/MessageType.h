@@ -26,8 +26,29 @@
 struct connection
 {
 	std::string ip;
-	int port;
-	int sockfd;
+	uint16_t port;
+	uint16_t sockfd;
+};
+
+struct media_chain
+{
+	connection client;
+	connection resource;
+	uint16_t client_recv_port;
+	uint16_t server_send_port;
+	uint32_t ssrc;
+
+	bool is_stream;
+	std::chrono::time_point<std::chrono::steady_clock> last_flesh;
+};
+
+struct peer
+{
+	connection conn;
+	int	type;
+	uint16_t count;
+
+	std::chrono::time_point<std::chrono::steady_clock> last_flesh;
 };
 
 template <typename T>

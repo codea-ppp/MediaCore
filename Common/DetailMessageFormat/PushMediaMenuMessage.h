@@ -13,7 +13,6 @@
 
 namespace MediaCoreMessageFormat
 {
-	// 推送负载均衡的信令和响应拉取负载均衡的信令只有 type 是不同的
 	// 但是 PushMediaMenuMessage 是用于推送增量的，RespondMediaMenuPullMessage 是相应拉取信令的全量推送
 	typedef RespondMediaMenuPullMessage PushMediaMenuMessage;
 

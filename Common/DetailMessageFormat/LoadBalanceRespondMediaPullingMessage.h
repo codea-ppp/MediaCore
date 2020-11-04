@@ -90,7 +90,6 @@ namespace MediaCoreMessageFormat
 		return 0;
 	}
 
-
 	int SetLoadBalanceRespondMediaPullData(LoadBalanceRespondMediaPullMessage* message, uint32_t ssrc, uint16_t send_port)
 	{
 		{

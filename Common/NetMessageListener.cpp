@@ -24,7 +24,12 @@ NetMessageListener::NetMessageListener()
 NetMessageListener::~NetMessageListener()
 {
 	_status = 0;
-	std::this_thread::sleep_for(std::chrono::seconds(8));
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+}
+
+void NetMessageListener::stop()
+{
+	_status = 0;
 }
 
 NetMessageListener* const NetMessageListener::GetInstance()

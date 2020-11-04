@@ -12,6 +12,7 @@ public:
 	static NetMessageListener* const GetInstance();
 
 	int listening(uint16_t port);
+	void stop();
 	void SetCallback(void (*Message2Go)(const connection& conn, void* MessageHeadPtr));
 
 private:

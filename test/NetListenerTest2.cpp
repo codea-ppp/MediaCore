@@ -22,17 +22,19 @@ void send_something()
 		addr.sin_family	= AF_INET;
 		addr.sin_port	= htons(PORT);
 
+		if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0)
+		{
+			dzlog_error("failed to convern ip");
+			return;
+		}
+		
 		if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)))
 		{
 			dzlog_error("connect failed, errno: %d", errno);
 			return;
 		}
 
-		if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0)
-		{
-			dzlog_error("failed to convern ip");
-			return;
-		}
+		dzlog_info("alloc a socket %d", sockfd);
 
 		while (true)
 		{
@@ -154,6 +156,9 @@ void send_something()
 					ClearPushMediaMenuMessage(&message);
 					break;
 				}
+
+				for (auto i = medias.begin(); i != medias.end(); ++i)
+					delete[] i->VideoName;
 
 				ClearPushMediaMenuMessage(&message);
 				std::this_thread::sleep_for(std::chrono::milliseconds(30));
