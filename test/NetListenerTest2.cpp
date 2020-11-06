@@ -44,14 +44,14 @@ void send_something()
 				SetKeepAliveData(&message, 33, 45);
 				if (!SendKeepAliveMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				PullOtherLoadBalanceMessage message;
 				InitPullOtherLoadBalanceMessage(&message);
 				if (!SendPullOtherLoadBalanceMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				std::vector<uint32_t> ip;
@@ -76,7 +76,7 @@ void send_something()
 				}
 
 				ClearRespondLoadBalancePullMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				std::vector<uint32_t> ip;
@@ -101,18 +101,18 @@ void send_something()
 				}
 
 				ClearPushLoadBalanceMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				PullMediaMenuMessage message;
 				InitPullMediaMenuMessage(&message);
 				if (!SendPullMediaMenuMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				std::vector<MediaMeta> medias;
-				for (int i = 0; i < 30; ++i)
+				for (int i = 0; i < 10; ++i)
 				{
 					MediaMeta temp;
 					temp.VideoNameLength = 32;
@@ -133,7 +133,7 @@ void send_something()
 				}
 
 				ClearRespondMediaMenuPullMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				std::vector<MediaMeta> medias;
@@ -161,12 +161,12 @@ void send_something()
 					delete[] i->VideoName;
 
 				ClearPushMediaMenuMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				ClientPullMediaStreamMessage message;
 				InitClientPullMediaStreamMessage(&message);
-				SetClientPullMediaStreamData(&message, "测试视频-sdl.mp4", 13026);
+				SetClientPullMediaStreamData(&message, "测试视频-sdl.mp4", 11026);
 				if (!SendClientPullMediaStreamMessage(sockfd, &message))
 				{
 					ClearClientPullMediaStreamMessage(&message);
@@ -174,7 +174,7 @@ void send_something()
 				}
 
 				ClearClientPullMediaStreamMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				LoadBalancePullMediaStreamMessage message;
@@ -187,7 +187,7 @@ void send_something()
 				}
 				 
 				ClearLoadBalancePullMediaStreamMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				ResourceServerRespondMediaPullMessage message;
@@ -195,15 +195,15 @@ void send_something()
 				SetResourceServerRespondMediaPullData(&message, 9023);
 				if (!SendResourceServerRespondMediaPullMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				LoadBalanceRespondMediaPullMessage message;
 				InitLoadBalanceRespondMediaPullMessage(&message);
-				SetLoadBalanceRespondMediaPullData(&message, 230, 3245);
+				SetLoadBalanceRespondMediaPullData(&message, 210, 3245);
 				if (!SendLoadBalanceRespondMediaPullMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				ClientStreamTriggerMessage message;
@@ -211,14 +211,14 @@ void send_something()
 				SetClientStreamTriggerData(&message, 32453);
 				if (!SendClientStreamTriggerMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
-				uint32_t length[3] = { 1024, 730, 730 };
+				uint32_t length[3] = { 1024, 710, 710 };
 				uint8_t* value[3];
 				value[0] = new uint8_t[1024];	memset(value[0], 33, 1024);
-				value[1] = new uint8_t[730];	memset(value[1], 34, 730);
-				value[2] = new uint8_t[730];	memset(value[2], 35, 730);
+				value[1] = new uint8_t[710];	memset(value[1], 34, 710);
+				value[2] = new uint8_t[710];	memset(value[2], 35, 710);
 
 				StreamMessage message;
 				InitStreamMessage(&message);
@@ -237,7 +237,7 @@ void send_something()
 				delete value[0];
 				delete value[1];
 				delete value[2];
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				StopStreamMessage message;
@@ -245,7 +245,7 @@ void send_something()
 				SetStopStreamData(&message, 2391);
 				if (!SendStopStreamMessage(sockfd, &message))
 					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
 				ResourceServerReportMessage message;
@@ -254,7 +254,7 @@ void send_something()
 				if (!SendResourceServerReportMessage(sockfd, &message))
 					break;
 
-				std::this_thread::sleep_for(std::chrono::milliseconds(30));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 		}
 

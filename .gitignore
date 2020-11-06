@@ -1,4 +1,6 @@
 tags
 *.vim
+*.so
+*.a
 *.o
 *.out
