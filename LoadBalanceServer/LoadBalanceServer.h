@@ -14,7 +14,7 @@
 #define LOADBANLANCE_MAP	1
 #define RESOURCE_MAP		2
 
-using namespace MediaCoreMessageFormat;
+using namespace media_core_message;
 void NetMessageListenerCallBack(const connection& conn, void* message);
 
 class LoadBalanceServer
@@ -33,7 +33,7 @@ private:
 	void deal_pullmediamenu(const connection, PullMediaMenuMessage*);
 	void deal_respondpullmediamenu(const connection, RespondMediaMenuPullMessage*);
 	void deal_pushmediamenu(const connection, PushMediaMenuMessage*);
-	void deal_clientpullstream(const connection, ClientPullMediaStreamMessage*);
+	void deal_clientpullstream(const connection, client_pull_media_stream_message*);
 	void deal_resourcerespondpullstream(const connection, ResourceServerRespondMediaPullMessage*);
 	void deal_stopstream(const connection, StopStreamMessage* message);
 	void deal_resourcereport(const connection, ResourceServerReportMessage* message);

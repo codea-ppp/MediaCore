@@ -4,3 +4,4 @@ tags
 *.a
 *.o
 *.out
+.ycm_extra_conf.py

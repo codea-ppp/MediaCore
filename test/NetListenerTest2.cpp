@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include "NetMessageListener.h"
 
-using namespace MediaCoreMessageFormat;
+using namespace media_core_message;
 
 #define PORT 27423
 
@@ -158,22 +158,24 @@ void send_something()
 				}
 
 				for (auto i = medias.begin(); i != medias.end(); ++i)
+				{
 					delete[] i->VideoName;
+				}
 
 				ClearPushMediaMenuMessage(&message);
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{
-				ClientPullMediaStreamMessage message;
-				InitClientPullMediaStreamMessage(&message);
+				client_pull_media_stream_message message;
+				Initclient_pull_media_stream_message(&message);
 				SetClientPullMediaStreamData(&message, "测试视频-sdl.mp4", 11026);
-				if (!SendClientPullMediaStreamMessage(sockfd, &message))
+				if (!Sendclient_pull_media_stream_message(sockfd, &message))
 				{
-					ClearClientPullMediaStreamMessage(&message);
+					Clearclient_pull_media_stream_message(&message);
 					break;
 				}
 
-				ClearClientPullMediaStreamMessage(&message);
+				Clearclient_pull_media_stream_message(&message);
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 			{

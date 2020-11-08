@@ -77,7 +77,7 @@ void LoadBalanceServer::GetCallBack(const connection conn, void* message)
 	case MSGTYPE_CLIENTPULLMEDIASTREAM:
 		ThreadpoolInstance::GetInstance()->schedule(
 			std::bind(&LoadBalanceServer::deal_clientpullstream, 
-			this, conn, (ClientPullMediaStreamMessage*)message));
+			this, conn, (client_pull_media_stream_message*)message));
 
 		break;
 
@@ -315,7 +315,7 @@ void LoadBalanceServer::send_loadbalancerespondpullstream(const connection conn,
 	}
 }
 
-void LoadBalanceServer::deal_clientpullstream(const connection conn, ClientPullMediaStreamMessage* message)
+void LoadBalanceServer::deal_clientpullstream(const connection conn, client_pull_media_stream_message* message)
 {
 	if (message == nullptr)
 	{
@@ -342,7 +342,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, ClientPullM
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 1));
 
-			ClearClientPullMediaStreamMessage(message);
+			Clearclient_pull_media_stream_message(message);
 			delete message;
 			return;
 		}
@@ -374,7 +374,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, ClientPullM
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 3));
 
-			ClearClientPullMediaStreamMessage(message);
+			Clearclient_pull_media_stream_message(message);
 			delete message;
 			return;
 		}
@@ -395,7 +395,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, ClientPullM
 				std::bind(&LoadBalanceServer::send_report,
 				this, conn, tid, 2));
 
-			ClearClientPullMediaStreamMessage(message);
+			Clearclient_pull_media_stream_message(message);
 			delete message;
 			return;
 		}
@@ -421,7 +421,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, ClientPullM
 		media_chain_map.erase(tid);
 	}
 	
-	ClearClientPullMediaStreamMessage(message);
+	Clearclient_pull_media_stream_message(message);
 	delete message;
 }
 

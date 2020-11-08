@@ -11,43 +11,11 @@
 #include "DetailMessageFormat/PushLoadBalanceMessage.h"
 #include "DetailMessageFormat/ClientStreamTriggerMessage.h"
 #include "DetailMessageFormat/PullOtherLoadBalanceMessage.h"
-#include "DetailMessageFormat/ClientPullMediaStreamMessage.h"
+#include "DetailMessageFormat/client_pull_media_stream_message.h"
 #include "DetailMessageFormat/RespondMediaMenuPullingMessage.h"
 #include "DetailMessageFormat/RespondLoadBalancePullingMessage.h"
 #include "DetailMessageFormat/LoadBalancePullMediaStreamMessage.h"
 #include "DetailMessageFormat/LoadBalanceRespondMediaPullingMessage.h"
 #include "DetailMessageFormat/ResourceServerRespondMediaPullingMessage.h"
-
-namespace MediaCoreMessageFormat
-{
-	template <typename Message>
-	int SetHead(Message* m, uint32_t type, uint32_t length, uint32_t tid)
-	{
-		if (m == nullptr)
-		{
-			dzlog_error("message == nullptr");
-			return -1;
-		}
-
-		m->type		= type;
-		m->length	= length;
-		m->tid		= tid;
-
-		return 0;
-	}
-
-	template <typename Message> 
-	int SetTransactionId(Message* m, uint32_t tid) 
-	{
-		if (m == nullptr)
-		{
-			dzlog_error("message == nullptr");
-			return -1;
-		}
-
-		m->tid = tid;
-		return 0;
-	}
-}
 
 #endif 

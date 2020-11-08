@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include "NetMessageListener.h"
 
-using namespace MediaCoreMessageFormat;
+using namespace media_core_message;
 
 void print_message(const connection& conn, void* message)
 {
@@ -62,9 +62,9 @@ void print_message(const connection& conn, void* message)
 		break;
 
 	case MSGTYPE_CLIENTPULLMEDIASTREAM:
-		PrintMessage((ClientPullMediaStreamMessage*)message);
-		ClearClientPullMediaStreamMessage((ClientPullMediaStreamMessage*)message);
-		delete (ClientPullMediaStreamMessage*)message;
+		PrintMessage((client_pull_media_stream_message*)message);
+		Clearclient_pull_media_stream_message((client_pull_media_stream_message*)message);
+		delete (client_pull_media_stream_message*)message;
 		break;
 
 	case MSGTYPE_LOADBALANCEPULLMEDIASTREAM:
