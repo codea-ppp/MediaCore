@@ -8,9 +8,9 @@ namespace media_core_message
 		return impl->send_data_to(sockfd);
 	}
 
-	int push_loadbalance_pull_message::full_data_remote(int sockfd, uint32_t length, uint32_t tid)
+	int push_loadbalance_pull_message::full_data_remote(int sockfd, uint32_t tid, uint32_t length)
 	{
-		return impl->full_data_remote(sockfd, length, tid);
+		return impl->full_data_remote(sockfd, tid, length);
 	}
 
 	int push_loadbalance_pull_message::full_data_direct(uint32_t tid, const std::vector<uint32_t>& ips, const std::vector<uint16_t>& ports)

@@ -72,7 +72,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int push_loadbalance_pull_message_impl::full_data_remote(int sockfd, uint32_t length, uint32_t tid)
+	int push_loadbalance_pull_message_impl::full_data_remote(int sockfd, uint32_t tid, uint32_t length)
 	{
 		if (sockfd < 0)
 		{

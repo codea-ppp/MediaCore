@@ -12,7 +12,7 @@ namespace media_core_message
 	{
 	public:
 		int send_data_to(int sockfd);
-		int full_data_remote(int sockfd, uint32_t tid);
+		int full_data_remote(int sockfd, uint32_t tid, uint32_t length);
 		int full_data_direct(uint32_t tid, uint16_t client_recv_port, uint32_t ssrc, const std::string& video_name);
 		int give_me_data(uint32_t& tid, uint16_t& client_recv_port, uint32_t& ssrc, std::string& video_name);
 

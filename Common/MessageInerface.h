@@ -15,7 +15,7 @@ namespace media_core_message
 	{
 	public:
 		virtual int send_data_to(int sockfd) = 0;
-		virtual int full_data_remote(int sockfd, uint32_t tid) = 0;
+		virtual int full_data_remote(int sockfd, uint32_t tid, uint32_t length) = 0;
 		virtual int full_data_direct() = 0;
 		virtual int give_me_data() = 0;
 		virtual void print_data() = 0;

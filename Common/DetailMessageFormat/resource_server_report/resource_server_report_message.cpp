@@ -8,7 +8,7 @@ namespace media_core_message
 		return impl->send_data_to(sockfd);
 	}
 
-	int resource_server_report::full_data_remote(int sockfd, uint32_t tid)
+	int resource_server_report::full_data_remote(int sockfd, uint32_t tid, uint32_t)
 	{
 		return impl->full_data_remote(sockfd, tid);
 	}
