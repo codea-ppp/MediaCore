@@ -1,7 +1,7 @@
 #include "connection.h"
 #include "connection_impl.h"
 
-int connection::send_message(media_core_message::message* mess)
+int connection::send_message(std::shared_ptr<media_core_message::message> mess) const
 {
 	return impl->send_message(mess);
 }
@@ -9,6 +9,11 @@ int connection::send_message(media_core_message::message* mess)
 int connection::give_message(std::shared_ptr<media_core_message::message>& mess) const
 {
 	return impl->give_message(mess);
+}
+
+const int connection::show_sockfd() const
+{
+	return impl->show_sockfd();
 }
 
 const char* connection::show_ip() const  

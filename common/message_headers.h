@@ -5,7 +5,7 @@
 #include "detail_message_format/client_stream_trigger/client_stream_trigger_message.h"
 #include "detail_message_format/keepalive/keepalive_message.h"
 #include "detail_message_format/loadbalance_pull_media_stream/loadbalance_pull_media_stream_message.h"
-#include "detail_message_format/loadbalance_respond_media_pull_message/loadbalance_respond_media_pull_message.h"
+#include "detail_message_format/loadbalance_respond_media_pull/loadbalance_respond_media_pull_message.h"
 #include "detail_message_format/pull_media_menu/pull_media_menu_message.h"
 #include "detail_message_format/pull_other_load_balance/pull_other_loadbalance_message.h"
 #include "detail_message_format/push_loadbalance_pull/push_loadbalance_pull_message.h"

@@ -10,7 +10,7 @@
 #include "message_headers.h"
 #include "connection_impl.h"
 
-int connection_impl::send_message(media_core_message::message* mess)
+int connection_impl::send_message(std::shared_ptr<media_core_message::message> mess)
 {
 	if (mess == nullptr)
 	{
@@ -63,7 +63,7 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_PUSHMEDIAMENU:
 		mess = std::make_shared<push_media_pull_message>(); break;
 	case MSGTYPE_CLIENTPULLMEDIASTREAM:
-		mess = std::make_shared<client_pull_media_stream_mesage>(); break;
+		mess = std::make_shared<client_pull_media_stream_message>(); break;
 	case MSGTYPE_LOADBALANCEPULLMEDIASTREAM:
 		mess = std::make_shared<loadbalance_pull_media_stream_message>(); break;
 	case MSGTYPE_RESOURCERESPONDMEDIAPULL:
@@ -77,7 +77,7 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_STOPSTREAM:
 		mess = std::make_shared<stop_stream_message>(); break;
 	case MSGTYPE_RESOURCESERVERREPORT:
-		mess = std::make_shared<resource_server_report>(); break;
+		mess = std::make_shared<resource_server_report_message>(); break;
 
 	default: return ERR_UNKNOWN_MESSAGE_TYPE;
 	}
@@ -89,6 +89,11 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	}
 
 	return 0;
+}
+
+const int connection_impl::show_sockfd()
+{
+	return _sockfd;
 }
 
 const char* connection_impl::show_ip()

@@ -1,6 +1,7 @@
 #ifndef THREAD_POOL_INSTANCE_H_
 #define THREAD_POOL_INSTANCE_H_
 
+#include <thread>
 #include <boost/threadpool.hpp>
 
 class threadpool_instance

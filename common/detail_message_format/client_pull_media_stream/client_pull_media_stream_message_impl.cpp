@@ -9,7 +9,7 @@
 
 namespace media_core_message
 {
-	int client_pull_media_stream_mesage_impl::send_data_to(int sockfd)
+	int client_pull_media_stream_message_impl::send_data_to(int sockfd)
 	{
 		if (_video_name.size() == 0)
 		{
@@ -64,7 +64,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int client_pull_media_stream_mesage_impl::full_data_remote(int sockfd, uint32_t tid) 
+	int client_pull_media_stream_message_impl::full_data_remote(int sockfd, uint32_t tid) 
 	{
 		if (sockfd < 0) 
 		{
@@ -122,7 +122,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int client_pull_media_stream_mesage_impl::full_data_direct(unsigned tid, const std::string& media2play, uint16_t receive_port)
+	int client_pull_media_stream_message_impl::full_data_direct(unsigned tid, const std::string& media2play, uint16_t receive_port)
 	{
 		_receive_port	= receive_port;
 		_video_name		= media2play;
@@ -132,7 +132,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int client_pull_media_stream_mesage_impl::give_me_data(uint32_t& tid, std::string& video_name, uint16_t& receive_port)
+	int client_pull_media_stream_message_impl::give_me_data(uint32_t& tid, std::string& video_name, uint16_t& receive_port)
 	{
 		receive_port	= _receive_port;
 		video_name		= _video_name;
@@ -142,27 +142,27 @@ namespace media_core_message
 
 	}
 	
-	void client_pull_media_stream_mesage_impl::print_data()
+	void client_pull_media_stream_message_impl::print_data()
 	{
 		dzlog_info("pull video: %s:%d", _video_name.c_str(), _receive_port);
 	}
 
-	client_pull_media_stream_mesage_impl::client_pull_media_stream_mesage_impl()
+	client_pull_media_stream_message_impl::client_pull_media_stream_message_impl()
 	{
 		clear();
 	}
 
-	client_pull_media_stream_mesage_impl::~client_pull_media_stream_mesage_impl()
+	client_pull_media_stream_message_impl::~client_pull_media_stream_message_impl()
 	{
 		clear();
 	}
 	
-	void client_pull_media_stream_mesage_impl::init()
+	void client_pull_media_stream_message_impl::init()
 	{
 		clear();
 	}
 
-	void client_pull_media_stream_mesage_impl::clear()
+	void client_pull_media_stream_message_impl::clear()
 	{
 		_video_name.clear();
 		_receive_port = 0;

@@ -6,7 +6,7 @@
 
 namespace media_core_message
 {
-	class client_pull_media_stream_mesage_impl
+	class client_pull_media_stream_message_impl
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -17,8 +17,8 @@ namespace media_core_message
 		void init();
 		void clear();
 
-		client_pull_media_stream_mesage_impl();
-		~client_pull_media_stream_mesage_impl();
+		client_pull_media_stream_message_impl();
+		~client_pull_media_stream_message_impl();
 
 	private:
 		std::string _video_name;

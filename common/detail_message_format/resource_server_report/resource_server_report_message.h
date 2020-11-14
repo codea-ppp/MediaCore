@@ -6,9 +6,9 @@
 
 namespace media_core_message
 {
-	class resource_server_report_impl;
+	class resource_server_report_message_impl;
 
-	class resource_server_report : public message
+	class resource_server_report_message : public message
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -18,14 +18,14 @@ namespace media_core_message
 		int tell_me_type();
 		void print_data();
 
-		resource_server_report();
+		resource_server_report_message();
 
 	private:
 		void init();
 		void clear();
 		
 	private:
-		std::shared_ptr<resource_server_report_impl> impl;
+		std::shared_ptr<resource_server_report_message_impl> impl;
 	};
 }
 

@@ -5,7 +5,7 @@
 
 namespace media_core_message
 {
-	class resource_server_report_impl
+	class resource_server_report_message_impl
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -17,8 +17,8 @@ namespace media_core_message
 		void init();
 		void clear();
 
-		resource_server_report_impl();
-		~resource_server_report_impl();
+		resource_server_report_message_impl();
+		~resource_server_report_message_impl();
 
 	private:
 		uint32_t _tid;

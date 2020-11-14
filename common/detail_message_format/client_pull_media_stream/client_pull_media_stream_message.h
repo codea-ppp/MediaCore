@@ -9,9 +9,9 @@
 
 namespace media_core_message
 {
-	class client_pull_media_stream_mesage_impl;
+	class client_pull_media_stream_message_impl;
 
-	class client_pull_media_stream_mesage : public message
+	class client_pull_media_stream_message : public message
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -21,14 +21,14 @@ namespace media_core_message
 		int tell_me_type();
 		void print_data();
 
-		client_pull_media_stream_mesage();
+		client_pull_media_stream_message();
 
 	private:
 		void init();
 		void clear();
 
 	private:
-		std::shared_ptr<client_pull_media_stream_mesage_impl> impl;
+		std::shared_ptr<client_pull_media_stream_message_impl> impl;
 	};
 }
 

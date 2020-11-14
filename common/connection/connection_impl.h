@@ -9,9 +9,10 @@
 class connection_impl
 {
 public: 
-	int send_message(media_core_message::message*);
+	int send_message(std::shared_ptr<media_core_message::message>);
 	int give_message(std::shared_ptr<media_core_message::message>&);
 	
+	const int		show_sockfd();
 	const char*		show_ip();
 	const uint16_t	show_port();
 

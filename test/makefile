@@ -1,11 +1,11 @@
 .PHONY : all clean
 
-all : NetListenerTest.out NetListenerTest2.out 
+all : net_listener_server.out net_listener_client.out 
 
-NetListenerTest.out : NetListenerTest.o
+net_listener_server.out : net_listener_server.o
 	g++ -Wall -g3 -pthread -o $@ $< -lzlog -lboost_thread -lnet_message_listener -lmessage $(foreach subdir, $(subdirs_absolutely), -L$(subdir))
 
-NetListenerTest2.out : NetListenerTest2.o
+net_listener_client.out : net_listener_client.o
 	g++ -Wall -g3 -pthread -o $@ $< -lzlog -lboost_thread -lnet_message_listener -lmessage $(foreach subdir, $(subdirs_absolutely), -L$(subdir))
 
 %.o : %.cpp

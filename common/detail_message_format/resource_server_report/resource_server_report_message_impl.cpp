@@ -3,7 +3,7 @@
 
 namespace media_core_message
 {
-	int resource_server_report_impl::send_data_to(int sockfd)
+	int resource_server_report_message_impl::send_data_to(int sockfd)
 	{
 		if (sockfd < 0) 
 		{
@@ -45,7 +45,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_report_impl::full_data_remote(int sockfd, uint32_t tid)
+	int resource_server_report_message_impl::full_data_remote(int sockfd, uint32_t tid)
 	{
 		if (sockfd < 0)
 		{
@@ -72,7 +72,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_report_impl::full_data_direct(uint32_t tid, uint8_t error)
+	int resource_server_report_message_impl::full_data_direct(uint32_t tid, uint8_t error)
 	{
 		_tid	= tid;
 		_error	= error;
@@ -80,7 +80,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_report_impl::give_me_data(uint32_t& tid, uint8_t& error)
+	int resource_server_report_message_impl::give_me_data(uint32_t& tid, uint8_t& error)
 	{
 		tid		= _tid;
 		error	= _error;
@@ -88,28 +88,28 @@ namespace media_core_message
 		return 0;
 	}
 
-	void resource_server_report_impl::print_data()
+	void resource_server_report_message_impl::print_data()
 	{
 		dzlog_info("tid: %d, error: %d", _tid, _error);
 	}
 
-	void resource_server_report_impl::init()
+	void resource_server_report_message_impl::init()
 	{
 		clear();
 	}
 
-	void resource_server_report_impl::clear()
+	void resource_server_report_message_impl::clear()
 	{
 		_tid	= 0;
 		_error	= 1;
 	}
 
-	resource_server_report_impl::resource_server_report_impl()
+	resource_server_report_message_impl::resource_server_report_message_impl()
 	{
 		clear();	
 	}
 
-	resource_server_report_impl::~resource_server_report_impl()
+	resource_server_report_message_impl::~resource_server_report_message_impl()
 	{
 		clear();	
 	}

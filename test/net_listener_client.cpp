@@ -8,7 +8,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "message_headers.h"
-#include "net_message_listener_impl.h"
+#include "threadpool_instance.h"
+#include "net_message_listener.h"
 
 using namespace media_core_message;
 
@@ -105,7 +106,7 @@ void send_push_media(int sock)
 
 void send_client_pull_media_stream(int sock)
 {
-	client_pull_media_stream_mesage mess;
+	client_pull_media_stream_message mess;
 	mess.full_data_direct(334, "测试视频但是看了房价是的罚款集散地 软3.mp4", 3423);
 	mess.send_data_to(sock);
 }
@@ -126,8 +127,11 @@ void send_resource_respond_media_pull(int sock)
 
 void send_loadbalance_respond_media_pull(int sock)
 {
+	struct in_addr addr;
+	inet_aton("192.168.55.21", &addr);
+
 	loadbalance_respond_media_pull_message mess;
-	mess.full_data_direct(234, 9999, 1024, 720, 48);
+	mess.full_data_direct(234, 9999, 1024, 720, addr.s_addr, 48);
 	mess.send_data_to(sock);
 }
 
@@ -164,7 +168,7 @@ void send_stop_stream(int sock)
 
 void send_resource_report(int sock)
 {
-	resource_server_report mess;
+	resource_server_report_message mess;
 	mess.full_data_direct(9955, 234);
 	mess.send_data_to(sock);
 }
@@ -262,9 +266,9 @@ int main(int argc, char* argv[])
 	threadpool_instance::get_instance()->schedule(&send_something);
 	threadpool_instance::get_instance()->schedule(&send_something);
 
-
 	while (true)
 	{
+//		send_something();
 		std::this_thread::sleep_for(std::chrono::seconds(20));
 	}
 
