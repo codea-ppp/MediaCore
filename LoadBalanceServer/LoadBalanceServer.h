@@ -7,7 +7,7 @@
 #include <vector>
 #include <stdint.h>
 #include "MessageFormat.h"
-#include "ThreadpoolInstance.h"
+#include "threadpool_instance.h"
 #include "NetMessageListener.h"
 
 #define CLIENT_MAP			0

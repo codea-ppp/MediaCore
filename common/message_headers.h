@@ -1,0 +1,20 @@
+#ifndef MESSAGE_HEADERS_H_
+#define MESSAGE_HEADERS_H_
+
+#include "detail_message_format/client_pull_media_stream/client_pull_media_stream_message.h"
+#include "detail_message_format/client_stream_trigger/client_stream_trigger_message.h"
+#include "detail_message_format/keepalive/keepalive_message.h"
+#include "detail_message_format/loadbalance_pull_media_stream/loadbalance_pull_media_stream_message.h"
+#include "detail_message_format/loadbalance_respond_media_pull_message/loadbalance_respond_media_pull_message.h"
+#include "detail_message_format/pull_media_menu/pull_media_menu_message.h"
+#include "detail_message_format/pull_other_load_balance/pull_other_loadbalance_message.h"
+#include "detail_message_format/push_loadbalance_pull/push_loadbalance_pull_message.h"
+#include "detail_message_format/push_media_menu_pull/push_media_menu_pull_message.h"
+#include "detail_message_format/resource_server_report/resource_server_report_message.h"
+#include "detail_message_format/resource_server_respond_media_pull/resource_server_respond_media_pull_message.h"
+#include "detail_message_format/respond_loadbalance_pull/respond_loadbalance_pull_message.h"
+#include "detail_message_format/respond_media_menu_pull/respond_media_menu_pull_message.h"
+#include "detail_message_format/stop_stream/stop_stream_message.h"
+#include "detail_message_format/stream/stream_message.h"
+
+#endif

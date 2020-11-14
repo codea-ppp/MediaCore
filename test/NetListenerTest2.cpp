@@ -2,15 +2,172 @@
 #include <chrono>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "NetMessageListener.h"
+#include "message_headers.h"
+#include "net_message_listener_impl.h"
 
 using namespace media_core_message;
 
 #define PORT 27423
+
+void send_keepalive(int sock)
+{
+	keepalive_message mess;
+	mess.full_data_direct(555, 234, 2);
+	mess.send_data_to(sock);
+}
+
+void send_pull_other_loadbalance(int sock)
+{
+	pull_other_loadbalance_message mess;
+	mess.full_data_direct(332);
+	mess.send_data_to(sock);
+}
+
+void send_respond_loadbalance_pulling(int sock)
+{
+	std::vector<uint32_t> ip;
+	std::vector<uint16_t> port;
+	ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
+	ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
+	ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
+	ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
+	ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
+	ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
+	ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
+	ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
+	ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
+
+	respond_loadbalance_pull_message mess;
+	mess.full_data_direct(1323, ip, port);
+	mess.send_data_to(sock);
+}
+
+void send_push_loadbalance(int sock)
+{
+	std::vector<uint32_t> ip;
+	std::vector<uint16_t> port;
+	ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
+	ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
+	ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
+	ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
+	ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
+	ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
+	ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
+	ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
+	ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
+
+	push_loadbalance_pull_message mess;
+	mess.full_data_direct(1234, ip, port);
+	mess.send_data_to(sock);
+}
+
+void send_pull_media_menu(int sock)
+{
+	pull_media_menu_message mess;
+	mess.full_data_direct(134234);
+	mess.send_data_to(sock);
+}
+
+void send_respond_media_pull(int sock) 
+{
+	std::vector<std::string> medias;
+	for (int i = 0; i < 10; ++i)
+	{
+		std::string temp("测试实验ddjfalsjf2313&*)){{{{<JIweier}}}} dd;d");
+		temp.append(std::to_string(i));
+		medias.push_back(temp);
+	}
+
+	respond_media_pull_message mess;
+	mess.full_data_direct(233423, medias);
+	mess.send_data_to(sock);
+}
+
+void send_push_media(int sock)
+{
+	std::vector<std::string> medias;
+	for (int i = 0; i < 10; ++i)
+	{
+		std::string temp("242342测试实验ddjfalsjf2313&*)){{{{<JIweier}}}} dd;d");
+		temp.append(std::to_string(i));
+		medias.push_back(temp);
+	}
+
+	push_media_pull_message mess;
+	mess.full_data_direct(2343, medias);
+	mess.send_data_to(sock);
+}
+
+void send_client_pull_media_stream(int sock)
+{
+	client_pull_media_stream_mesage mess;
+	mess.full_data_direct(334, "测试视频但是看了房价是的罚款集散地 软3.mp4", 3423);
+	mess.send_data_to(sock);
+}
+
+void send_loadbalance_pull_media_stream(int sock)
+{
+	loadbalance_pull_media_stream_message mess;
+	mess.full_data_direct(789, 4234, 898, "测试大力开发撒娇的分量卡kj;w");
+	mess.send_data_to(sock);
+}
+
+void send_resource_respond_media_pull(int sock)
+{
+	resource_server_respond_media_pull_message mess;
+	mess.full_data_direct(32432, 12342);
+	mess.send_data_to(sock);
+}
+
+void send_loadbalance_respond_media_pull(int sock)
+{
+	loadbalance_respond_media_pull_message mess;
+	mess.full_data_direct(234, 9999, 48);
+	mess.send_data_to(sock);
+}
+
+void send_client_trigger(int sock)
+{
+	client_stream_trigger_message mess;
+	mess.full_data_direct(234, 5555);
+	mess.send_data_to(sock);
+}
+
+void send_stream(int sock)
+{
+	uint32_t length[3] = { 1024, 720, 720 };
+	uint8_t* value[3];
+	value[0] = new uint8_t[1024];	memset(value[0], 33, 1024);
+	value[1] = new uint8_t[720];	memset(value[1], 34, 720);
+	value[2] = new uint8_t[720];	memset(value[2], 35, 720);
+
+	stream_message mess;
+	mess.full_data_direct(234234, value, length);
+	mess.send_data_to(sock);
+
+	delete value[0];
+	delete value[1];
+	delete value[2];
+}
+
+void send_stop_stream(int sock)
+{
+	stop_stream_message mess;
+	mess.full_data_direct(23, 23334);
+	mess.send_data_to(sock);
+}
+
+void send_resource_report(int sock)
+{
+	resource_server_report mess;
+	mess.full_data_direct(9955, 234);
+	mess.send_data_to(sock);
+}
 
 void send_something()
 {
@@ -38,229 +195,54 @@ void send_something()
 
 		while (true)
 		{
-			{
-				KeepAliveMessage message;
-				InitKeepAliveMessage(&message);
-				SetKeepAliveData(&message, 33, 45);
-				if (!SendKeepAliveMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				PullOtherLoadBalanceMessage message;
-				InitPullOtherLoadBalanceMessage(&message);
-				if (!SendPullOtherLoadBalanceMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				std::vector<uint32_t> ip;
-				std::vector<uint16_t> port;
-				ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
-				ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
-				ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
-				ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
-				ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
-				ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
-				ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
-				ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
-				ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_keepalive(sockfd);
 
-				RespondLoadBalancePullMessage message;
-				InitRespondLoadBalancePullMessage(&message);
-				SetOtherLoadBalanceData(&message, ip, port);
-				if (!SendRespondLoadBalancePullMessage(sockfd, &message))
-				{
-					ClearRespondLoadBalancePullMessage(&message);
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_pull_other_loadbalance(sockfd);
 
-				ClearRespondLoadBalancePullMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				std::vector<uint32_t> ip;
-				std::vector<uint16_t> port;
-				ip.push_back(inet_addr("127.1.1.1")); port.push_back(htons(25564));
-				ip.push_back(inet_addr("127.1.1.2")); port.push_back(htons(25565));
-				ip.push_back(inet_addr("127.1.1.3")); port.push_back(htons(25566));
-				ip.push_back(inet_addr("127.1.1.4")); port.push_back(htons(25567));
-				ip.push_back(inet_addr("127.1.1.5")); port.push_back(htons(25568));
-				ip.push_back(inet_addr("127.1.1.6")); port.push_back(htons(25561));
-				ip.push_back(inet_addr("127.1.1.7")); port.push_back(htons(25544));
-				ip.push_back(inet_addr("127.1.1.8")); port.push_back(htons(25584));
-				ip.push_back(inet_addr("127.1.1.9")); port.push_back(htons(28564));
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_respond_loadbalance_pulling(sockfd);
 
-				PushLoadBalanceMessage message;
-				InitPushLoadBalanceMessage(&message);
-				SetOtherLoadBalanceData(&message, ip, port);
-				if (!SendPushLoadBalanceMessage(sockfd, &message))
-				{
-					ClearPushLoadBalanceMessage(&message);
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_push_loadbalance(sockfd);
 
-				ClearPushLoadBalanceMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				PullMediaMenuMessage message;
-				InitPullMediaMenuMessage(&message);
-				if (!SendPullMediaMenuMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				std::vector<MediaMeta> medias;
-				for (int i = 0; i < 10; ++i)
-				{
-					MediaMeta temp;
-					temp.VideoNameLength = 32;
-					temp.VideoName = new uint8_t[32];
-					memset(temp.VideoName, 0, 32);
-					snprintf((char*)temp.VideoName, 32, "%s", std::to_string(i).c_str());
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_pull_media_menu(sockfd);
 
-					medias.push_back(temp);
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_respond_media_pull(sockfd);
 
-				RespondMediaMenuPullMessage message;
-				InitRespondMediaMenuPullMessage(&message);
-				SetMediaMetaData(&message, medias);
-				if (!SendRespondMediaMenuPullMessage(sockfd, &message))
-				{
-					ClearRespondMediaMenuPullMessage(&message);
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_push_media(sockfd);
 
-				ClearRespondMediaMenuPullMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				std::vector<MediaMeta> medias;
-				for (int i = 50; i > 0; --i)
-				{
-					MediaMeta temp;
-					temp.VideoNameLength = 32;
-					temp.VideoName = new uint8_t[32];
-					memset(temp.VideoName, 0, 32);
-					snprintf((char*)temp.VideoName, 32, "%s", std::to_string(i).c_str());
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_client_pull_media_stream(sockfd);
 
-					medias.push_back(temp);
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_loadbalance_pull_media_stream(sockfd);
 
-				PushMediaMenuMessage message;
-				InitPushLoadBalanceMessage(&message);
-				SetMediaMetaData(&message, medias);
-				if (!SendPushMediaMenuMessage(sockfd, &message))
-				{
-					ClearPushMediaMenuMessage(&message);
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_resource_respond_media_pull(sockfd);
 
-				for (auto i = medias.begin(); i != medias.end(); ++i)
-				{
-					delete[] i->VideoName;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_loadbalance_respond_media_pull(sockfd);
 
-				ClearPushMediaMenuMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				client_pull_media_stream_message message;
-				Initclient_pull_media_stream_message(&message);
-				SetClientPullMediaStreamData(&message, "测试视频-sdl.mp4", 11026);
-				if (!Sendclient_pull_media_stream_message(sockfd, &message))
-				{
-					Clearclient_pull_media_stream_message(&message);
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_client_trigger(sockfd);
 
-				Clearclient_pull_media_stream_message(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				LoadBalancePullMediaStreamMessage message;
-				InitLoadBalancePullMediaStreamMessage(&message);
-				SetLoadBalancePullMediaStreamData(&message, "测试视频ddd, 图形处理dsfdfa.avi", 602, 5562);
-				if (!SendLoadBalancePullMediaStreamMessage(sockfd, &message))
-				{
-					ClearLoadBalancePullMediaStreamMessage(&message);
-					break;
-				}
-				 
-				ClearLoadBalancePullMediaStreamMessage(&message);
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				ResourceServerRespondMediaPullMessage message;
-				InitResourceServerRespondMediaPullMessage(&message);
-				SetResourceServerRespondMediaPullData(&message, 9023);
-				if (!SendResourceServerRespondMediaPullMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				LoadBalanceRespondMediaPullMessage message;
-				InitLoadBalanceRespondMediaPullMessage(&message);
-				SetLoadBalanceRespondMediaPullData(&message, 210, 3245);
-				if (!SendLoadBalanceRespondMediaPullMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				ClientStreamTriggerMessage message;
-				InitClientStreamTriggerMessage(&message);
-				SetClientStreamTriggerData(&message, 32453);
-				if (!SendClientStreamTriggerMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				uint32_t length[3] = { 1024, 710, 710 };
-				uint8_t* value[3];
-				value[0] = new uint8_t[1024];	memset(value[0], 33, 1024);
-				value[1] = new uint8_t[710];	memset(value[1], 34, 710);
-				value[2] = new uint8_t[710];	memset(value[2], 35, 710);
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_stream(sockfd);
 
-				StreamMessage message;
-				InitStreamMessage(&message);
-				SetStreamData(&message, value, length);
-				if (!SendStreamMessage(sockfd, &message))
-				{
-					ClearStreamMessage(&message);
-					delete value[0];
-					delete value[1];
-					delete value[2];
-					break;
-				}
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_stop_stream(sockfd);
 
-				ClearStreamMessage(&message);
+//			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
+			send_resource_report(sockfd);
 
-				delete value[0];
-				delete value[1];
-				delete value[2];
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				StopStreamMessage message;
-				InitStopStreamMessage(&message);
-				SetStopStreamData(&message, 2391);
-				if (!SendStopStreamMessage(sockfd, &message))
-					break;
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
-			{
-				ResourceServerReportMessage message;
-				InitResourceServerReportMessage(&message);
-				SetResourceServerReportData(&message, 76);
-				if (!SendResourceServerReportMessage(sockfd, &message))
-					break;
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
 		}
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		dzlog_info("close socket %d from break", sockfd);
 		close(sockfd);
 	}
@@ -269,16 +251,17 @@ void send_something()
 
 int main(int argc, char* argv[]) 
 {
-	dzlog_init("../config/zlog.config", "test");
+	dzlog_init("../zlog.config", "test");
 
-	ThreadpoolInstance::GetInstance()->schedule(&send_something);
-	ThreadpoolInstance::GetInstance()->schedule(&send_something);
-	ThreadpoolInstance::GetInstance()->schedule(&send_something);
-	ThreadpoolInstance::GetInstance()->schedule(&send_something);
+//	threadpool_instance::get_instance()->schedule(&send_something);
+//	threadpool_instance::get_instance()->schedule(&send_something);
+//	threadpool_instance::get_instance()->schedule(&send_something);
+//	threadpool_instance::get_instance()->schedule(&send_something);
 
 	while (true)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(20));
+		send_something();
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 
 	return 0;

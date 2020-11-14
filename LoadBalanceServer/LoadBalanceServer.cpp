@@ -33,70 +33,70 @@ void LoadBalanceServer::GetCallBack(const connection conn, void* message)
 	switch (type)
 	{
 	case MSGTYPE_KEEPALIVE: 
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_keepalive, 
 			this, conn, (KeepAliveMessage*)message));
 
 		break;
 
 	case MSGTYPE_PULLOTHERLOADBALANCE:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_pullotherloadbalance, 
 			this, conn, (PullOtherLoadBalanceMessage*)message));
 
 		break;
 
 	case MSGTYPE_RESPONDLOADBALANCEPULL:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_respondpullotherloadbalance, 
 			this, conn, (RespondLoadBalancePullMessage*)message));
 
 		break;
 
 	case MSGTYPE_PUSHMEDIAMENU:	
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_pushmediamenu,
 			this, conn, (PushMediaMenuMessage*)message));
 
 		break;
 
 	case MSGTYPE_PULLMEDIAMENU:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_pullmediamenu, 
 			this, conn, (PullMediaMenuMessage*)message));
 
 		break;
 
 	case MSGTYPE_RESPONDMEDIAMENU:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_respondpullmediamenu, 
 			this, conn, (RespondMediaMenuPullMessage*)message));
 
 		break;
 
 	case MSGTYPE_CLIENTPULLMEDIASTREAM:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_clientpullstream, 
 			this, conn, (client_pull_media_stream_message*)message));
 
 		break;
 
 	case MSGTYPE_RESOURCERESPONDMEDIAPULL:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_resourcerespondpullstream, 
 			this, conn, (ResourceServerRespondMediaPullMessage*)message));
 
 		break;
 
 	case MSGTYPE_STOPSTREAM:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_stopstream, 
 			this, conn, (StopStreamMessage*)message));
 
 		break;
 
 	case MSGTYPE_RESOURCESERVERREPORT:
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::deal_resourcereport, 
 			this, conn, (ResourceServerReportMessage*)message));
 
@@ -182,7 +182,7 @@ void LoadBalanceServer::deal_resourcereport(const connection conn, ResourceServe
 		if (!media_chain_map.count(tid))
 		{
 			dzlog_error("unknown tid %d", tid);
-			ThreadpoolInstance::GetInstance()->schedule(
+			threadpool_instance::get_instance()->schedule(
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 6));
 
@@ -194,7 +194,7 @@ void LoadBalanceServer::deal_resourcereport(const connection conn, ResourceServe
 		media_chain_map.erase(tid);
 	}
 
-	ThreadpoolInstance::GetInstance()->schedule(
+	threadpool_instance::get_instance()->schedule(
 		std::bind(&LoadBalanceServer::send_report, 
 		this, client, tid, err));
 
@@ -227,7 +227,7 @@ void LoadBalanceServer::deal_stopstream(const connection conn, StopStreamMessage
 		media_chain_map.erase(tid);
 	}
 
-	ThreadpoolInstance::GetInstance()->schedule(
+	threadpool_instance::get_instance()->schedule(
 		std::bind(&LoadBalanceServer::send_stopstream, 
 		this, resource, tid, ssrc));
 
@@ -275,7 +275,7 @@ void LoadBalanceServer::deal_resourcerespondpullstream(const connection conn, Re
 		{
 			dzlog_error("no such media chain %d", tid);
 
-			ThreadpoolInstance::GetInstance()->schedule(
+			threadpool_instance::get_instance()->schedule(
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 6));
 
@@ -290,7 +290,7 @@ void LoadBalanceServer::deal_resourcerespondpullstream(const connection conn, Re
 		client	= media_chain_map[tid].client;
 	}
 
-	ThreadpoolInstance::GetInstance()->schedule(
+	threadpool_instance::get_instance()->schedule(
 		std::bind(&LoadBalanceServer::send_loadbalancerespondpullstream, 
 		this, client, tid, ssrc, send_port));
 
@@ -338,7 +338,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, client_pull
 		std::lock_guard<std::mutex> lk(video_names_lock);
 		if (!video_name_map.count(video_name))
 		{
-			ThreadpoolInstance::GetInstance()->schedule(
+			threadpool_instance::get_instance()->schedule(
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 1));
 
@@ -370,7 +370,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, client_pull
 
 		if (!current_fd)
 		{
-			ThreadpoolInstance::GetInstance()->schedule(
+			threadpool_instance::get_instance()->schedule(
 				std::bind(&LoadBalanceServer::send_report, 
 				this, conn, tid, 3));
 
@@ -391,7 +391,7 @@ void LoadBalanceServer::deal_clientpullstream(const connection conn, client_pull
 		{
 			dzlog_error("client %d@%s:%d pull stream with same tid: %d", conn.sockfd, conn.ip.c_str(), conn.port, tid);
 
-			ThreadpoolInstance::GetInstance()->schedule(
+			threadpool_instance::get_instance()->schedule(
 				std::bind(&LoadBalanceServer::send_report,
 				this, conn, tid, 2));
 
@@ -564,7 +564,7 @@ void LoadBalanceServer::deal_respondpullotherloadbalance(const connection conn, 
 
 		if (is_self) continue;
 
-		ThreadpoolInstance::GetInstance()->schedule(
+		threadpool_instance::get_instance()->schedule(
 			std::bind(&LoadBalanceServer::send_first_keepalive, 
 			this, message->ip[i], message->port[i]));
 	}
@@ -719,14 +719,14 @@ void LoadBalanceServer::deal_keepalive(const connection conn, KeepAliveMessage* 
 
 			case LOADBANLANCE_MAP:
 				// 不向在 keepalive 中得到的 loadbalance 拉取 
-				ThreadpoolInstance::GetInstance()->schedule(
+				threadpool_instance::get_instance()->schedule(
 					std::bind(&LoadBalanceServer::push_new_loadbalance_to_all, 
 					this, temp));
 
 				break;
 
 			case RESOURCE_MAP:
-				ThreadpoolInstance::GetInstance()->schedule(
+				threadpool_instance::get_instance()->schedule(
 					std::bind(&LoadBalanceServer::pull_media_menu, 
 					this, temp));
 
@@ -857,7 +857,7 @@ void LoadBalanceServer::listening(uint32_t sid, uint16_t port)
 	NetMessageListener::GetInstance()->SetCallback(&NetMessageListenerCallBack);
 	NetMessageListener::GetInstance()->listening(port);
 
-	ThreadpoolInstance::GetInstance()->schedule(std::bind(&LoadBalanceServer::shoting_dead, this));
+	threadpool_instance::get_instance()->schedule(std::bind(&LoadBalanceServer::shoting_dead, this));
 }
 
 void LoadBalanceServer::delete_peer(peer p)
