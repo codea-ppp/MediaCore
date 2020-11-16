@@ -16,6 +16,7 @@ public:
 	void stop();
 	void set_callback(void (*message_2_go)(const connection conn, uint32_t message_type, std::shared_ptr<media_core_message::message> ptr));
 
+	int connect_with_message(uint32_t ip, uint16_t port, std::shared_ptr<media_core_message::message>);
 	int listening(uint16_t port);
 
 private:

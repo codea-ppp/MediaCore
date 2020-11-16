@@ -23,11 +23,10 @@ public:
 	~connection_impl();
 
 private:
-	void _rolling();
+	void _rolling(std::shared_ptr<media_core_message::message>);
 
 private:
-	std::queue<std::shared_ptr<media_core_message::message>> message_queue;
-	std::mutex message_queue_lock;
+	std::mutex message_sending_lock;
 
 	const int		_sockfd; // also the connection_id
 	const uint32_t	_ip;

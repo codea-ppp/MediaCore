@@ -67,11 +67,16 @@ int loadbalance::listening(uint16_t port, uint32_t sid)
 	net_message_listener::get_instance()->set_callback(&net_message_listener_callback);
 	net_message_listener::get_instance()->listening(port);
 
-	_port = _self_port = port;
 	_sid	= sid;
 	_status = 1;
 
-	threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_dead, this));
+	std::thread* p = new std::thread(&loadbalance::shoting_dead, this);
+	p->detach();
+	delete p;
+
+	p = new std::thread(&server::rolling_lb_map, this);
+	p->detach();
+	delete p;
 
 	return 0;
 }
@@ -366,8 +371,6 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_loa
 			uint32_t ip		= ips[i];
 			uint16_t port	= ports[i];
 
-			if (ip == _self_ip && port == _self_port) continue;
-
 			set_new_lb_map(ip, port, false);
 		}
 	}
@@ -571,34 +574,6 @@ int loadbalance::tell_me_type(uint32_t sid)
 	return (sid & 0xff000000) >> 24;
 }
 
-void loadbalance::set_lb_map(uint32_t ip, uint16_t port, bool status)
-{
-	std::lock_guard<std::mutex> lk(_lb_ip_port_2_is_connect_lock);
-	_lb_ip_port_2_is_connect[std::make_pair(ip, port)] = status;
-}
-
-void loadbalance::set_new_lb_map(uint32_t ip, uint16_t port, bool status)
-{
-	std::pair<uint32_t, uint16_t> key = std::make_pair(ip, port);
-
-	std::lock_guard<std::mutex> lk(_lb_ip_port_2_is_connect_lock);
-
-	if (!_lb_ip_port_2_is_connect.count(key)) return;
-
-	_lb_ip_port_2_is_connect[key] = status;
-}
-
-void loadbalance::erase_lb_map(uint32_t ip, uint16_t port)
-{
-	std::pair<uint32_t, uint16_t> key = std::make_pair(ip, port);
-
-	std::lock_guard<std::mutex> lk(_lb_ip_port_2_is_connect_lock);
-	if (!_lb_ip_port_2_is_connect.count(key))
-		return;
-	
-	_lb_ip_port_2_is_connect.erase(key);
-}
-
 void loadbalance::shoting_dead()
 {
 	std::shared_ptr<keepalive_message> mess;
@@ -613,15 +588,29 @@ void loadbalance::shoting_dead()
 			for (auto j = _peer_map[i].begin(); j != _peer_map[i].end(); ++j)
 			{
 				std::shared_ptr<peer> p = j->second;
-				if (!p->is_expires()) 
+				if (p->is_expires()) 
 				{
-					p->get_connection().send_message(mess);
+					dzlog_info("peer %s:%d expires", p->get_connection().show_ip(), p->get_connection().show_port());
+
+					// 这里不清除其他资源, 因为死锁
+					// 在其他地方查到没有的时候, 清除
+					_peer_map[i].erase(j);
 					continue;
 				}
 					
-				// 这里不清除其他资源, 因为死锁
-				// 在其他地方查到没有的时候, 清除
-				_peer_map[i].erase(j);
+				p->get_connection().send_message(mess);
+			}
+		}
+
+		{
+			std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+			for (auto i = _media_chain_map.begin(); i != _media_chain_map.end(); ++i)
+			{
+				if (i->second->is_expires())
+				{
+					dzlog_info("media chain %d expires", i->second->get_ssrc());
+					_media_chain_map.erase(i);
+				}
 			}
 		}
 	}
@@ -632,24 +621,6 @@ void loadbalance::shoting_dead()
 
 loadbalance::loadbalance()
 {
-	_status = 0;
-
-	struct ifaddrs* ifAddrStruct = nullptr ;
-    struct ifaddrs* ifa	= nullptr ;
-
-    getifaddrs(&ifAddrStruct);
-
-    for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) 
-	{
-        if (!ifa->ifa_addr) 
-			continue;
-
-        if (ifa->ifa_addr->sa_family == AF_INET) 
-            _self_ip = (uint32_t)((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
-    }
-
-    if (ifAddrStruct != NULL) 
-		freeifaddrs(ifAddrStruct);
 }
 
 loadbalance::~loadbalance()

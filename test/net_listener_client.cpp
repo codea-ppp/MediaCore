@@ -261,10 +261,6 @@ int main(int argc, char* argv[])
 	threadpool_instance::get_instance()->schedule(&send_something);
 	threadpool_instance::get_instance()->schedule(&send_something);
 	threadpool_instance::get_instance()->schedule(&send_something);
-	threadpool_instance::get_instance()->schedule(&send_something);
-	threadpool_instance::get_instance()->schedule(&send_something);
-	threadpool_instance::get_instance()->schedule(&send_something);
-	threadpool_instance::get_instance()->schedule(&send_something);
 
 	while (true)
 	{

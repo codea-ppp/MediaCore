@@ -17,6 +17,11 @@ void net_message_listener::set_callback(void (*message_2_go)(const connection, u
 	impl->set_callback(message_2_go);
 }
 
+int net_message_listener::connect_with_message(uint32_t ip, uint16_t port, std::shared_ptr<media_core_message::message> mess)
+{
+	return impl->connect_with_message(ip, port, mess);
+}
+
 int net_message_listener::listening(uint16_t port)
 {
 	return impl->listening(port);

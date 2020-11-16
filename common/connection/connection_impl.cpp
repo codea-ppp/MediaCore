@@ -13,16 +13,7 @@
 
 int connection_impl::send_message(std::shared_ptr<media_core_message::message> mess)
 {
-	if (mess == nullptr)
-	{
-		dzlog_error("message == nullptr");
-		return ERR_MESSAGE_EQU_NULLPTR;
-	}
-
-	std::lock_guard<std::mutex> lk(message_queue_lock);
-	message_queue.push(mess);
-
-	threadpool_instance::get_instance()->schedule(std::bind(&connection_impl::_rolling, this));
+	threadpool_instance::get_instance()->schedule(std::bind(&connection_impl::_rolling, this, mess));
 	return 0;
 }
 
@@ -124,19 +115,10 @@ connection_impl::~connection_impl()
 	close(_sockfd);
 }
 
-void connection_impl::_rolling()
+void connection_impl::_rolling(std::shared_ptr<media_core_message::message> mess)
 {
-	std::shared_ptr<media_core_message::message> mess;
+	std::lock_guard<std::mutex> lk(message_sending_lock);
 
-	{
-		std::lock_guard<std::mutex> lk(message_queue_lock);
-		mess = message_queue.front();
-		message_queue.pop();
-	}
-
-	if (!mess->send_data_to(_sockfd))	
+	if (mess->send_data_to(_sockfd))	
 		dzlog_error("send message failed: %d", errno);
-
-	if (!message_queue.empty())
-		threadpool_instance::get_instance()->schedule(std::bind(&connection_impl::_rolling, this));
 }

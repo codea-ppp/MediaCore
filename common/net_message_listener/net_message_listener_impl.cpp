@@ -37,6 +37,33 @@ void net_message_listener_impl::set_callback(void (*message_2_go)(const connecti
 	_message_2_go = message_2_go;
 }
 
+int net_message_listener_impl::connect_with_message(uint32_t ip, uint16_t port, std::shared_ptr<media_core_message::message> mess)
+{
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+	struct sockaddr_in addr;
+	addr.sin_family	= AF_INET;
+	addr.sin_port	= port;
+
+	if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0)
+	{
+		dzlog_error("failed to convern ip");
+		return -1;
+	}
+	
+	if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)))
+	{
+		dzlog_error("connect failed, errno: %d", errno);
+		return -1;
+	}
+
+	connection conn(sockfd, ip, port);
+	conn.send_message(mess);
+
+	threadpool_instance::get_instance()->schedule(std::bind(&net_message_listener_impl::_rolling, this, conn));
+	return 0;
+}
+
 int net_message_listener_impl::listening(uint16_t port)
 {
 	if (_message_2_go == nullptr)

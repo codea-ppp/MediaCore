@@ -51,10 +51,6 @@ private:
 	int fresh_or_insert_peer(int id, int type, const connection conn, const uint32_t sid);
 	int fresh_peer(int id, int type);
 	int tell_me_type(uint32_t sid);
-	void set_lb_map(uint32_t, uint16_t, bool);
-	void set_new_lb_map(uint32_t, uint16_t, bool);
-	void erase_lb_map(uint32_t, uint16_t);
-
 	void shoting_dead();
 
 	loadbalance();
@@ -66,16 +62,9 @@ private:
 	const loadbalance&& operator=(const loadbalance&&)	= delete;
 
 private:
-	uint32_t _self_ip;
-	uint16_t _self_port;
-	uint16_t _port;
-
 	// 以视频名称为 key
 	std::map<std::string, std::map<int, std::shared_ptr<peer>>> _video_resources;
 	std::mutex _video_resources_lock;
-
-	std::map<std::pair<uint32_t, uint16_t>, bool> _lb_ip_port_2_is_connect;
-	std::mutex _lb_ip_port_2_is_connect_lock;
 
 	// socket fd for key
 	std::map<uint32_t, std::shared_ptr<peer>> _peer_map[3];
