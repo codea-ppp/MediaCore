@@ -3,7 +3,7 @@
 
 namespace media_core_message
 {
-	int respond_media_pull_message_impl::send_data_to(int sockfd)
+	int respond_media_menu_pull_message_impl::send_data_to(int sockfd)
 	{
 		if (sockfd < 0)
 		{
@@ -76,7 +76,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int respond_media_pull_message_impl::full_data_remote(int sockfd, uint32_t tid, uint32_t length)
+	int respond_media_menu_pull_message_impl::full_data_remote(int sockfd, uint32_t tid, uint32_t length)
 	{
 		if (sockfd < 0)
 		{
@@ -150,7 +150,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int respond_media_pull_message_impl::full_data_direct(uint32_t tid, const std::vector<std::string>& video_names)
+	int respond_media_menu_pull_message_impl::full_data_direct(uint32_t tid, const std::vector<std::string>& video_names)
 	{
 		if (!video_names.size())
 		{
@@ -164,7 +164,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int respond_media_pull_message_impl::give_me_data(uint32_t& tid, std::vector<std::string>& video_names)
+	int respond_media_menu_pull_message_impl::give_me_data(uint32_t& tid, std::vector<std::string>& video_names)
 	{
 		tid = _tid;
 		video_names = _video_names;
@@ -172,7 +172,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	void respond_media_pull_message_impl::print_data()
+	void respond_media_menu_pull_message_impl::print_data()
 	{
 		dzlog_info("tid: %d, length: %d", _tid, _length);
 
@@ -182,22 +182,22 @@ namespace media_core_message
 		}
 	}
 
-	respond_media_pull_message_impl::respond_media_pull_message_impl()
+	respond_media_menu_pull_message_impl::respond_media_menu_pull_message_impl()
 	{
 		clear();
 	}
 
-	respond_media_pull_message_impl::~respond_media_pull_message_impl()
+	respond_media_menu_pull_message_impl::~respond_media_menu_pull_message_impl()
 	{
 		clear();
 	}
 
-	void respond_media_pull_message_impl::init()
+	void respond_media_menu_pull_message_impl::init()
 	{
 		clear();
 	}
 
-	void respond_media_pull_message_impl::clear()
+	void respond_media_menu_pull_message_impl::clear()
 	{
 		_tid = _length = 0;
 		_video_names.clear();

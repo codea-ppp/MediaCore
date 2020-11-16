@@ -7,7 +7,7 @@
 
 namespace media_core_message
 {
-	class respond_media_pull_message_impl
+	class respond_media_menu_pull_message_impl
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -17,8 +17,8 @@ namespace media_core_message
 
 		void print_data();
 
-		respond_media_pull_message_impl();
-		~respond_media_pull_message_impl();
+		respond_media_menu_pull_message_impl();
+		~respond_media_menu_pull_message_impl();
 
 		void init();
 		void clear();

@@ -21,6 +21,11 @@ const char* connection::show_ip() const
 	return impl->show_ip();
 }
 
+const uint32_t connection::show_ip_raw() const
+{
+	return impl->show_ip_raw();
+}
+
 const uint16_t connection::show_port() const
 {
 	return impl->show_port();

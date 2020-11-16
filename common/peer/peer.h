@@ -5,10 +5,14 @@
 #include "connection.h"
 #include "message_headers.h"
 
+#define PEER_TYPE_CLIENT		0
+#define PEER_TYPE_LOADBALANCE	1
+#define	PEER_TYPE_RESOURCE		2
+
 class peer
 {
 public:
-	peer(const connection conn, const uint32_t sid, const uint32_t pid);
+	peer(const connection conn, const uint32_t sid);
 
 	int send_message(std::shared_ptr<media_core_message::message>);
 
@@ -17,10 +21,10 @@ public:
 
 	const connection get_connection();
 
-	const uint32_t get_pid();
-	const uint32_t get_sid();
-	const uint32_t get_type();
-	const uint32_t get_load();
+	const uint32_t get_pid() const;
+	const uint32_t get_sid() const;
+	const uint32_t get_type() const;
+	const uint32_t get_load() const;
 	void set_load(uint32_t);
 
 private:

@@ -14,6 +14,7 @@ public:
 
 	const int show_sockfd() const; // socket fd for connection id
 	const char* show_ip() const;
+	const uint32_t show_ip_raw() const;
 	const uint16_t show_port() const;
 
 	connection(const int sockfd, const uint32_t ip, const uint16_t port);

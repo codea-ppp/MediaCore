@@ -3,7 +3,7 @@
 
 namespace media_core_message
 {
-	int resource_server_respond_media_pull_message_impl::send_data_to(int sockfd)
+	int resource_server_respond_media_menu_pull_message_impl::send_data_to(int sockfd)
 	{
 		if (sockfd < 0)
 		{
@@ -59,7 +59,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_respond_media_pull_message_impl::full_data_remote(int sockfd, uint32_t tid)
+	int resource_server_respond_media_menu_pull_message_impl::full_data_remote(int sockfd, uint32_t tid)
 	{
 		if (sockfd < 0)
 		{
@@ -86,7 +86,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_respond_media_pull_message_impl::full_data_direct(uint32_t tid, uint32_t length, uint32_t width, uint16_t server_send_port)
+	int resource_server_respond_media_menu_pull_message_impl::full_data_direct(uint32_t tid, uint32_t length, uint32_t width, uint16_t server_send_port)
 	{
 		_tid = tid;
 		_length = length;
@@ -96,7 +96,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int resource_server_respond_media_pull_message_impl::give_me_data(uint32_t& tid, uint32_t& length, uint32_t& width, uint16_t& server_send_port)
+	int resource_server_respond_media_menu_pull_message_impl::give_me_data(uint32_t& tid, uint32_t& length, uint32_t& width, uint16_t& server_send_port)
 	{
 		tid = _tid;
 		length = _length;
@@ -106,27 +106,27 @@ namespace media_core_message
 		return 0;
 	}
 
-	void resource_server_respond_media_pull_message_impl::print_data()
+	void resource_server_respond_media_menu_pull_message_impl::print_data()
 	{
 		dzlog_info("tid: %d, size(%d, %d), server send port: %d", _tid, _length, _width, _server_send_port);
 	}
 
-	void resource_server_respond_media_pull_message_impl::init()
+	void resource_server_respond_media_menu_pull_message_impl::init()
 	{
 		clear();
 	}
 
-	void resource_server_respond_media_pull_message_impl::clear()
+	void resource_server_respond_media_menu_pull_message_impl::clear()
 	{
 		_tid = _length = _width = _server_send_port = 0;
 	}
 
-	resource_server_respond_media_pull_message_impl::resource_server_respond_media_pull_message_impl()
+	resource_server_respond_media_menu_pull_message_impl::resource_server_respond_media_menu_pull_message_impl()
 	{
 		clear();
 	}
 
-	resource_server_respond_media_pull_message_impl::~resource_server_respond_media_pull_message_impl()
+	resource_server_respond_media_menu_pull_message_impl::~resource_server_respond_media_menu_pull_message_impl()
 	{
 		clear();
 	}

@@ -5,7 +5,7 @@
 
 namespace media_core_message
 {
-	class loadbalance_respond_media_pull_message_impl
+	class loadbalance_respond_media_menu_pull_message_impl
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -17,8 +17,8 @@ namespace media_core_message
 		void init();
 		void clear();
 
-		loadbalance_respond_media_pull_message_impl();
-		~loadbalance_respond_media_pull_message_impl();
+		loadbalance_respond_media_menu_pull_message_impl();
+		~loadbalance_respond_media_menu_pull_message_impl();
 
 	private:
 		uint32_t _tid;

@@ -1,7 +1,7 @@
 #include "peer.h"
 
-peer::peer(const connection conn, const uint32_t sid, const uint32_t pid) 
-	: _conn(conn), _sid(sid), _pid(pid)
+peer::peer(const connection conn, const uint32_t sid) 
+	: _conn(conn), _sid(sid), _pid(conn.show_sockfd())
 {
 	_last_time_refresh = std::chrono::steady_clock::now();
 }
@@ -33,22 +33,22 @@ const connection peer::get_connection()
 	return _conn;
 }
 
-const uint32_t peer::get_pid()
+const uint32_t peer::get_pid() const 
 {
 	return _pid;
 }
 
-const uint32_t peer::get_sid()
+const uint32_t peer::get_sid() const 
 {
 	return _sid;
 }
 
-const uint32_t peer::get_type()
+const uint32_t peer::get_type() const 
 {
 	return (_sid & 0xff000000) >> 24;
 }
 
-const uint32_t peer::get_load()
+const uint32_t peer::get_load() const
 {
 	return _load;
 }

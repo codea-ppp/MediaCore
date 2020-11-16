@@ -6,9 +6,9 @@
 
 namespace media_core_message
 {
-	class resource_server_respond_media_pull_message_impl;
+	class resource_server_respond_media_menu_pull_message_impl;
 
-	class resource_server_respond_media_pull_message : public message
+	class resource_server_respond_media_menu_pull_message : public message
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -18,15 +18,15 @@ namespace media_core_message
 		int tell_me_type();
 		void print_data();
 
-		resource_server_respond_media_pull_message();
-		~resource_server_respond_media_pull_message();
+		resource_server_respond_media_menu_pull_message();
+		~resource_server_respond_media_menu_pull_message();
 
 	private:
 		void init();
 		void clear();
 
 	private:
-		std::shared_ptr<resource_server_respond_media_pull_message_impl> impl;
+		std::shared_ptr<resource_server_respond_media_menu_pull_message_impl> impl;
 	};
 }
 

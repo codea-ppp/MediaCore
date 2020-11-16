@@ -9,6 +9,7 @@
 #include "message_type.h"
 #include "message_headers.h"
 #include "connection_impl.h"
+#include "threadpool_instance.h"
 
 int connection_impl::send_message(std::shared_ptr<media_core_message::message> mess)
 {
@@ -18,12 +19,10 @@ int connection_impl::send_message(std::shared_ptr<media_core_message::message> m
 		return ERR_MESSAGE_EQU_NULLPTR;
 	}
 
-	if (!mess->send_data_to(_sockfd))	
-	{
-		dzlog_error("send message failed: %d", errno);
-		return ERR_MESSAGE_SEND_FAILED;
-	}
+	std::lock_guard<std::mutex> lk(message_queue_lock);
+	message_queue.push(mess);
 
+	threadpool_instance::get_instance()->schedule(std::bind(&connection_impl::_rolling, this));
 	return 0;
 }
 
@@ -59,7 +58,7 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_PULLMEDIAMENU:
 		mess = std::make_shared<pull_media_menu_message>(); break;
 	case MSGTYPE_RESPONDMEDIAMENU:
-		mess = std::make_shared<respond_media_pull_message>(); break;
+		mess = std::make_shared<respond_media_menu_pull_message>(); break;
 	case MSGTYPE_PUSHMEDIAMENU:
 		mess = std::make_shared<push_media_pull_message>(); break;
 	case MSGTYPE_CLIENTPULLMEDIASTREAM:
@@ -67,9 +66,9 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_LOADBALANCEPULLMEDIASTREAM:
 		mess = std::make_shared<loadbalance_pull_media_stream_message>(); break;
 	case MSGTYPE_RESOURCERESPONDMEDIAPULL:
-		mess = std::make_shared<resource_server_respond_media_pull_message>(); break;
+		mess = std::make_shared<resource_server_respond_media_menu_pull_message>(); break;
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
-		mess = std::make_shared<loadbalance_respond_media_pull_message>(); break;
+		mess = std::make_shared<loadbalance_respond_media_menu_pull_message>(); break;
 	case MSGTYPE_CLIENTSTREAMTRIGGER:
 		mess = std::make_shared<client_stream_trigger_message>(); break;
 	case MSGTYPE_STREAMFRAME:
@@ -105,6 +104,11 @@ const char* connection_impl::show_ip()
 	return ip_buffer;
 }
 
+const uint32_t connection_impl::show_ip_raw()
+{
+	return _ip;
+}
+
 const uint16_t connection_impl::show_port()
 {
 	return _port;
@@ -118,4 +122,21 @@ connection_impl::connection_impl(const int sockfd, const uint32_t ip, const uint
 connection_impl::~connection_impl()
 {
 	close(_sockfd);
+}
+
+void connection_impl::_rolling()
+{
+	std::shared_ptr<media_core_message::message> mess;
+
+	{
+		std::lock_guard<std::mutex> lk(message_queue_lock);
+		mess = message_queue.front();
+		message_queue.pop();
+	}
+
+	if (!mess->send_data_to(_sockfd))	
+		dzlog_error("send message failed: %d", errno);
+
+	if (!message_queue.empty())
+		threadpool_instance::get_instance()->schedule(std::bind(&connection_impl::_rolling, this));
 }
