@@ -143,24 +143,27 @@ void server::erase_lb_map(uint32_t ip, uint16_t port)
 
 void server::rolling_lb_map()
 {
-	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
-
+	while (_status)
 	{
-		std::lock_guard<std::mutex> lk(_lb_ip_port_2_is_connect_lock);
+		std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
+		mess->full_data_direct(get_tid(), _sid, get_load());
 
-		for (auto i = _lb_ip_port_2_is_connect.begin(); i != _lb_ip_port_2_is_connect.end(); ++i)
 		{
-			if (i->second) continue;
+			std::lock_guard<std::mutex> lk(_lb_ip_port_2_is_connect_lock);
 
-			uint32_t ip		= i->first.first;
-			uint32_t port	= i->first.second;
+			for (auto i = _lb_ip_port_2_is_connect.begin(); i != _lb_ip_port_2_is_connect.end(); ++i)
+			{
+				if (i->second) continue;
 
-			net_message_listener::get_instance()->connect_with_message(ip, port, mess);
+				uint32_t ip		= i->first.first;
+				uint32_t port	= i->first.second;
+
+				net_message_listener::get_instance()->connect_with_message(ip, port, mess);
+			}
 		}
+		
+		std::this_thread::sleep_for(std::chrono::seconds(60));
 	}
-	
-	std::this_thread::sleep_for(std::chrono::seconds(60));
 }
 
 int server::deal_message(const connection, std::shared_ptr<client_pull_media_stream_message> mess)

@@ -144,19 +144,18 @@ void send_client_trigger(connection conn)
 
 void send_stream(connection conn)
 {
-	uint32_t length[3] = { 1024, 720, 720 };
+	static uint8_t buffer[1024][3];
+	uint32_t length[3] = { 1024, 1024, 1024 };
+
 	uint8_t* value[3];
-	value[0] = new uint8_t[1024];	memset(value[0], 33, 1024);
-	value[1] = new uint8_t[720];	memset(value[1], 34, 720);
-	value[2] = new uint8_t[720];	memset(value[2], 35, 720);
+
+	value[0] = buffer[0];	memset(value[0], 33, 1024);
+	value[1] = buffer[1];	memset(value[1], 34, 1024);
+	value[2] = buffer[2];	memset(value[2], 35, 1024);
 
 	std::shared_ptr<stream_message> mess = std::make_shared<stream_message>();
 	mess->full_data_direct(234234, value, length);
 	conn.send_message(mess);
-
-	delete value[0];
-	delete value[1];
-	delete value[2];
 }
 
 void send_stop_stream(connection conn)
@@ -224,7 +223,6 @@ void send_something(connection conn)
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(80)); 
 	}
-
 }
 
 int main(int argc, char* argv[]) 
@@ -255,11 +253,9 @@ int main(int argc, char* argv[])
 
 	threadpool_instance::get_instance()->schedule(std::bind(&send_something, conn));
 	threadpool_instance::get_instance()->schedule(std::bind(&send_something, conn));
-	threadpool_instance::get_instance()->schedule(std::bind(&send_something, conn));
 
 	while (true)
 	{
-//		send_something(conn);
 		std::this_thread::sleep_for(std::chrono::seconds(20));
 	}
 

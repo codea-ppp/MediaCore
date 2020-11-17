@@ -3,9 +3,9 @@
 all : loadbalance.out 
 
 loadbalance.out : loadbalance.o main.o
-	g++ $(common_gcc_flags) -o $@ main.o loadbalance.o $(common_out_links) $(foreach subdir, $(subdirs_absolutely), -L$(subdir))
+	g++ $(common_gcc_flags) -o $@ *.o $(common_out_links) -ljsoncpp	 $(foreach subdir, $(subdirs_absolutely), -L$(subdir))
 
-%.o : %.cpp %.h
+%.o : %.cpp
 	g++ $(common_gcc_flags) -o $@ -c $< $(foreach subdir, $(subdirs_absolutely), -I$(subdir))
 
 clean :

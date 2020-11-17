@@ -61,7 +61,7 @@ namespace media_core_message
 			once = send(sockfd, buffer + i, all - i, 0);
 			if (once == -1)
 			{
-
+				delete[] buffer;
 				clear();
 
 				dzlog_error("send error: %d", errno);
@@ -69,6 +69,7 @@ namespace media_core_message
 			}
 		}
 
+		delete[] buffer;
 		return 0;
 	}
 

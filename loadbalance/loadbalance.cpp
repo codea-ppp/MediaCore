@@ -129,6 +129,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<client_pull
 	{
 		std::lock(_peer_map_lock[PEER_TYPE_CLIENT], _peer_map_lock[PEER_TYPE_RESOURCE]);
 
+		// 函数开始时候 fresh 的时候没有失败, 所以这里 id 是必然存在的
 		ptr = std::make_shared<media_chain>(ssrc, _peer_map[PEER_TYPE_CLIENT][id], _peer_map[PEER_TYPE_RESOURCE][selected_resource], video_2_play);
 
 		std::shared_ptr<loadbalance_pull_media_stream_message> next_mess = std::make_shared<loadbalance_pull_media_stream_message>();
@@ -576,7 +577,7 @@ int loadbalance::tell_me_type(uint32_t sid)
 
 void loadbalance::shoting_dead()
 {
-	std::shared_ptr<keepalive_message> mess;
+	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
 	mess->full_data_direct(get_tid(), _sid, get_load());
 
 	while (_status)
@@ -613,10 +614,11 @@ void loadbalance::shoting_dead()
 				}
 			}
 		}
+
+		std::this_thread::sleep_for(std::chrono::seconds(60));
+		swi_load();
 	}
 
-	std::this_thread::sleep_for(std::chrono::seconds(60));
-	swi_load();
 }
 
 loadbalance::loadbalance()

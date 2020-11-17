@@ -163,6 +163,7 @@ namespace media_core_message
 		_y_length = YUV_length[0];
 		_u_length = YUV_length[1];
 		_v_length = YUV_length[2];
+
 		_tid = tid;
 
 		dzlog_info("set YUV(%d, %d, %d)", _y_length, _u_length, _v_length);
@@ -235,6 +236,7 @@ namespace media_core_message
 		YUV_length[0] = _y_length;
 		YUV_length[1] = _u_length;
 		YUV_length[2] = _v_length;
+
 		tid = _tid;
 
 		must_be_nullptr[0] = new uint8_t[_y_length];
