@@ -210,23 +210,21 @@ void server::set_loadbalance_map(uint32_t sid, const connection conn, bool is_co
 	_loadbalance_2_is_connect_map[k] = v;
 }
 
-void server::set_new_loadbalance_map(uint32_t sid, const connection conn, bool is_connect)
+void server::set_new_loadbalance_map(uint32_t sid, uint32_t ip, uint16_t port, bool is_connect)
 {
 	if (sid == _sid) return;
 
-	std::pair<uint32_t, uint16_t>	k = std::make_pair(conn.show_ip_raw(), conn.show_port_raw());
+	std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, htons(port));
 	std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
 
 	for (auto i = _self_ip.begin(); i != _self_ip.end(); ++i)
 	{
-		if (_self_port != conn.show_port_raw()) break;
-		if (*i == conn.show_ip_raw())			return;
-
-		dzlog_info("set a new lb %s:%d", conn.show_ip(), conn.show_port());
+		if (_self_port != port) break;
+		if (*i == ip)			return;
 	}
 
 	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
-	if (!_loadbalance_2_is_connect_map.count(k)) return;
+	if (_loadbalance_2_is_connect_map.count(k)) return;
 	_loadbalance_2_is_connect_map[k] = v;
 }
 

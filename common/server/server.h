@@ -36,7 +36,7 @@ public:
 	void rolling_client_map();
 
 	void set_loadbalance_map(uint32_t sid, const connection conn, bool is_connect);
-	void set_new_loadbalance_map(uint32_t sid, const connection conn, bool is_connect);
+	void set_new_loadbalance_map(uint32_t sid, uint32_t ip, uint16_t port, bool is_connect);
 	void erase_loadbalance_map(const connection conn);
 	void rolling_loadbalance_map();
 

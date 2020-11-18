@@ -385,13 +385,9 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_loa
 
 	if (mess->give_me_data(tid, sids, ips, ports)) return -1;
 	
+	for (unsigned int i = 0; i < ips.size(); ++i)
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
-
-		for (unsigned int i = 0; i < ips.size(); ++i)
-		{
-			set_new_loadbalance_map(sids[i], conn, false);
-		}
+		set_new_loadbalance_map(sids[i], ips[i], ports[i], false);
 	}
 	
 	return 0;
