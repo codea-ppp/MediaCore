@@ -30,27 +30,6 @@ public:
 	int insert_id_tid_2_ssrc(int which, int id, uint32_t tid, uint32_t ssrc);
 	int remove_id_tid_2_ssrc(int which, int id, uint32_t tid);
 
-	void set_client_map(uint32_t sid, const connection conn, bool is_connect);
-	void set_new_client_map(uint32_t sid, const connection conn, bool is_connect);
-	void erase_client_map(const connection conn);
-	void rolling_client_map();
-
-	void set_loadbalance_map(uint32_t sid, const connection conn, bool is_connect);
-	void set_new_loadbalance_map(uint32_t sid, uint32_t ip, uint16_t port, bool is_connect);
-	void erase_loadbalance_map(const connection conn);
-	void rolling_loadbalance_map();
-
-	void set_resource_map(uint32_t sid, const connection conn, bool is_connect);
-	void set_new_resource_map(uint32_t sid, const connection conn, bool is_connect);
-	void erase_resource_map(const connection conn);
-	void rolling_resource_map();
-
-	void rolling_map();
-
-	int sockfd_2_sid(int);
-	int insert_sock_sid(int sock, uint32_t sid);
-	int remove_sock_sid(int sock);
-
 protected:
 	virtual int deal_message(const connection, std::shared_ptr<client_pull_media_stream_message>);
 	virtual int deal_message(const connection, std::shared_ptr<client_stream_trigger_message>);
@@ -78,22 +57,6 @@ private:
 	std::map<std::pair<int, uint32_t>, uint32_t> _sid_tid_2_ssrc[2];
 	std::mutex _sid_tid_2_ssrc_lock[2];
 
-	// map<pair<ip, port>, pair<is_connect, sid>>
-	std::map<std::pair<uint32_t, uint16_t>, std::pair<bool, uint32_t>> _client_2_is_connect_map;
-	std::vector<uint32_t> _client_sids;
-	std::mutex _client_2_is_connect_map_lock;
-
-	std::map<std::pair<uint32_t, uint16_t>, std::pair<bool, uint32_t>> _loadbalance_2_is_connect_map;
-	std::vector<uint32_t> _loadbalance_sids;
-	std::mutex _loadbalance_2_is_connect_map_lock;
-
-	std::map<std::pair<uint32_t, uint16_t>, std::pair<bool, uint32_t>> _resource_2_is_connect_map;
-	std::vector<uint32_t> _resource_sids;
-	std::mutex _resource_2_is_connect_map_lock;
-
-	std::map<int, uint32_t> _sock_2_sid;
-	std::mutex _sock_2_sid_lock;
-	
 	uint32_t _tid_boundary;
 
 	uint32_t load_index;

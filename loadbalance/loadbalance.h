@@ -9,12 +9,17 @@
 #include <vector>
 #include <memory>
 #include <utility>
-#include "server.h"
 #include "media_chain.h"
+#include "client_ability.h"
+#include "resource_ability.h"
+#include "loadbalance_ability.h"
 
 void net_message_listener_callback(const connection conn, uint32_t message_type, std::shared_ptr<message> ptr);
 
-class loadbalance : public server
+class loadbalance : 
+	public client_ability, 
+	public loadbalance_ability, 
+	public resource_ability
 {
 public:
 	static loadbalance* get_instance();
@@ -48,19 +53,7 @@ private:
 	uint32_t find_resource_least_load();
 	uint32_t find_idle_ssrc();
 
-	int fresh_or_insert_client(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
-	int fresh_client(int sock);
-
-	int fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
-	int fresh_loadbalance(int sock);
-
-	int fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
-	int fresh_resource(int sock);
-
-	void shoting_dead();
-	void shoting_client();
-	void shoting_loadbalance();
-	void shoting_resource();
+	void shoting_and_rolling();
 	void shoting_media_chain();
 
 	loadbalance();
@@ -75,18 +68,6 @@ private:
 	// 以视频名称为 key
 	std::map<std::string, std::map<int, std::shared_ptr<peer>>> _video_resources;
 	std::mutex _video_resources_lock;
-
-	// sid for key
-	std::map<uint32_t, std::shared_ptr<peer>> _client_map;
-	std::mutex _client_map_lock;
-
-	// sid for key
-	std::map<uint32_t, std::shared_ptr<peer>> _loadbalance_map;
-	std::mutex _loadbalance_map_lock;
-
-	// sid for key
-	std::map<uint32_t, std::shared_ptr<peer>> _resource_map;
-	std::mutex _resource_map_lock;
 
 	// ssrc for key
 	std::map<int, std::shared_ptr<media_chain>> _media_chain_map;

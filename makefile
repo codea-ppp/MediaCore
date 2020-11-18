@@ -1,5 +1,5 @@
 export common_gcc_flags = -g3 -Wall -pthread
-export common_out_links = -lzlog -lboost_thread -lnet_message_listener -lmessage -lserver
+export common_out_links = -lzlog -lboost_thread -lnet_message_listener -lmessage
 
 pwd = $(shell pwd)
 subdirs = $(shell fd -t d)

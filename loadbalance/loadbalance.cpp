@@ -67,15 +67,11 @@ int loadbalance::listening(uint16_t port, uint32_t sid)
 	net_message_listener::get_instance()->set_callback(&net_message_listener_callback);
 	net_message_listener::get_instance()->listening(port);
 
-	_self_port	= port;
-	_status		= 1;
-	_sid		= sid;
+	server::_self_port	= port;
+	server::_status		= 1;
+	server::_sid		= sid;
 
-	std::thread* p = new std::thread(&loadbalance::shoting_dead, this);
-	p->detach();
-	delete p;
-
-	p = new std::thread(&server::rolling_map, this);
+	std::thread* p = new std::thread(&loadbalance::shoting_and_rolling, this);
 	p->detach();
 	delete p;
 
@@ -98,7 +94,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<client_pull
 	mess->give_me_data(tid, video_2_play, recv_port);
 
 	uint32_t ssrc		= find_idle_ssrc();
-	uint32_t client_sid	= sockfd_2_sid(sock);
+	uint32_t client_sid	= client_sockfd_2_sid(sock);
 
 	int	selected_resource_sid = check_video_and_find_resource_least_load(video_2_play);	// 这个是 sid
 	if (selected_resource_sid == -1)
@@ -151,8 +147,6 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<client_pull
 
 int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_message> mess)
 {
-	const int sock = conn.show_sockfd();
-
 	uint32_t tid, sid; 
 	uint16_t listening_port;
 	uint8_t	count;
@@ -171,14 +165,14 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 	{
 	// 新注册的负载均衡应该发给所有的客户端和视频资源
 	case PEER_TYPE_LOADBALANCE:
-		ret = fresh_or_insert_loadbalance(sock, conn, sid, listening_port, count);
+		ret = fresh_or_insert_loadbalance(conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
 			return 0;
 		}
 
-		set_loadbalance_map(sid, conn, true);
+		set_loadbalance_map(sid, conn.show_ip_raw(), conn.show_port_raw(), true);
 
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::send_new_loadbalance_2_client_resource, this, sid, conn));
 		dzlog_info("get a new loadbalance %s:%d", conn.show_ip(), conn.show_port());
@@ -186,14 +180,14 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 
 	// 新注册的视频资源应该拉取视频目录
 	case PEER_TYPE_RESOURCE:		
-		ret = fresh_or_insert_resource(sock, conn, sid, listening_port, count);
+		ret = fresh_or_insert_resource(conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
 			return 0;
 		}
 
-		set_resource_map(sid, conn, true);
+		set_resource_map(sid, conn.show_ip_raw(), conn.show_port_raw(), true);
 
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::send_media_menu_pulling, this, conn));
 		dzlog_info("get a new resource %s:%d", conn.show_ip(), conn.show_port());
@@ -201,14 +195,14 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 
 	// 新注册的客户端不需要做额外的事
 	case PEER_TYPE_CLIENT:			
-		ret = fresh_or_insert_client(sock, conn, sid, listening_port, count);
+		ret = fresh_or_insert_client(conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
 			return 0;
 		}
 
-		set_client_map(sid, conn, true);
+		set_client_map(sid, conn.show_ip_raw(), conn.show_port_raw(), true);
 		
 		dzlog_info("get a new client %s:%d", conn.show_ip(), conn.show_port());
 		return 0;
@@ -267,7 +261,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<push_media_
 	}
 
 	std::vector<std::string> video_names;
-	uint32_t sid = sockfd_2_sid(id);
+	uint32_t sid = resource_sockfd_2_sid(id);
 	uint32_t tid;
 
 	mess->give_me_data(tid, video_names);
@@ -404,7 +398,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_med
 
 	std::vector<std::string> video_names;
 	uint32_t tid;
-	uint32_t sid = sockfd_2_sid(id);
+	uint32_t sid = resource_sockfd_2_sid(id);
 
 	mess->give_me_data(tid, video_names);
 
@@ -560,236 +554,23 @@ uint32_t loadbalance::find_idle_ssrc()
 	return _ssrc_boundary;
 }
  
-int loadbalance::fresh_or_insert_client(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
+void loadbalance::shoting_and_rolling()
 {
-	std::lock_guard<std::mutex> lk(_client_map_lock);
-
-	if (_client_map.count(sid))
+	while (server::_status)
 	{
-		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
+		threadpool_instance::get_instance()->schedule(std::bind(&client_ability::shoting_client, this));
+		threadpool_instance::get_instance()->schedule(std::bind(&client_ability::rolling_client_map, this));
 
-		_client_map[sid]->fresh();
-		_client_map[sid]->set_load(load);
-		return 0;
-	}
+		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::shoting_loadbalance, this));
+		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::rolling_loadbalance_map, this));
 
-	if (insert_sock_sid(sock, sid))
-	{
-		// 这里就算是失败也不要返回
-		dzlog_info("mapping %d->%d already exist", sock, sid);
-	}
+		threadpool_instance::get_instance()->schedule(std::bind(&resource_ability::shoting_resource, this));
+		threadpool_instance::get_instance()->schedule(std::bind(&resource_ability::rolling_resource_map, this));
 
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
-	p->set_load(load);
-	_client_map[sid] = p;
-
-	return 1;
-}
-
-int loadbalance::fresh_client(int sock)
-{
-	{
-		std::lock_guard<std::mutex> lk(_client_map_lock);
-
-		uint32_t sid = sockfd_2_sid(sock);
-		if (!_client_map.count(sid))
-		{
-//			dzlog_error("fresh client %d not exist", sock);
-			return -1;
-		}
-
-		_client_map[sid]->fresh();
-	}
-
-	dzlog_info("fresh socket %d", sock);
-	return 0;
-}
-
-int loadbalance::fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
-{
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
-
-	if (_loadbalance_map.count(sid))
-	{
-		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
-
-		_loadbalance_map[sid]->fresh();
-		_loadbalance_map[sid]->set_load(load);
-		return 0;
-	}
-
-	if (insert_sock_sid(sock, sid))
-	{
-		// 这里就算是失败也不要返回
-		dzlog_info("mapping %d->%d already exist", sock, sid);
-	}
-
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
-	p->set_load(load);
-	_loadbalance_map[sid] = p;
-
-	return 1;
-}
-
-int loadbalance::fresh_loadbalance(int sock)
-{
-	uint32_t sid = sockfd_2_sid(sock);
-
-	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
-
-		if (!_loadbalance_map.count(sid))
-		{
-			return -1;
-		}
-	}
-
-	_loadbalance_map[sid]->fresh();
-	return 0;
-}
-
-int loadbalance::fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
-{
-	std::lock_guard<std::mutex> lk(_resource_map_lock);
-
-	if (_resource_map.count(sid))
-	{
-		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
-
-		_resource_map[sid]->fresh();
-		_resource_map[sid]->set_load(load);
-		return 0;
-	}
-
-	if (1 == insert_sock_sid(sock, sid))
-	{
-		// 这里就算是失败也不要返回
-		dzlog_info("mapping %d->%d already exist", sock, sid);
-	}
-
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
-	p->set_load(load);
-	_resource_map[sid] = p;
-
-	return 1;
-}
-
-int loadbalance::fresh_resource(int sock)
-{
-	uint32_t sid = sockfd_2_sid(sock);
-
-	{
-		std::lock_guard<std::mutex> lk(_resource_map_lock);
-
-		if (!_resource_map.count(sid))
-		{
-			dzlog_error("fresh resource %d not exist", sock);
-			return -1;
-		}
-	}
-
-	_resource_map[sid]->fresh();
-	return 0;
-}
-
-void loadbalance::shoting_dead()
-{
-	while (_status)
-	{
-		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_client, this));
-		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_loadbalance, this));
-		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_resource, this));
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_media_chain, this));
-
+		
 		std::this_thread::sleep_for(std::chrono::seconds(5));
-		swi_load();
-	}
-}
-
-void loadbalance::shoting_client()
-{
-	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
-
-	std::lock_guard<std::mutex> lk(_client_map_lock);
-
-	dzlog_info("shoting %ld client", _client_map.size());
-
-	for (auto i = _client_map.begin(); i != _client_map.end(); )
-	{
-		std::shared_ptr<peer> p = i->second;
-
-		if (p->is_expires()) 
-		{
-			dzlog_info("peer %s:%d expires", p->get_connection().show_ip(), p->get_connection().show_port());
-
-			// 这里不清除其他资源, 因为死锁, 在其他地方查到没有的时候, 清除
-			_client_map.erase(i++);
-		}
-		else
-		{
-			p->get_connection().send_message(mess);
-			++i;
-		}
-	}
-}
-
-void loadbalance::shoting_loadbalance()
-{
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
-
-	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
-
-	std::shared_ptr<pull_other_loadbalance_message> lb_mess = std::make_shared<pull_other_loadbalance_message>();
-	lb_mess->full_data_direct(get_tid());
-
-	dzlog_info("shoting %ld loadbalance", _loadbalance_map.size());
-
-	for (auto i = _loadbalance_map.begin(); i != _loadbalance_map.end(); )
-	{
-		std::shared_ptr<peer> p = i->second;
-
-		if (p->is_expires()) 
-		{
-			dzlog_info("peer %s:%d expires", p->get_connection().show_ip(), p->get_connection().show_port());
-
-			// 这里不清除其他资源, 因为死锁 在其他地方查到没有的时候, 清除
-			_loadbalance_map.erase(i++);
-		}
-		else
-		{
-			p->get_connection().send_message(mess);
-			p->get_connection().send_message(lb_mess);
-
-			++i;
-		}
-	}
-}
-
-void loadbalance::shoting_resource()
-{
-	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
-
-	std::lock_guard<std::mutex> lk(_resource_map_lock);
-	dzlog_info("shoting %ld resource", _resource_map.size());
-
-	for (auto i = _resource_map.begin(); i != _resource_map.end(); )
-	{
-		std::shared_ptr<peer> p = i->second;
-		if (p->is_expires()) 
-		{
-			dzlog_info("peer %s:%d expires", p->get_connection().show_ip(), p->get_connection().show_port());
-
-			// 这里不清除其他资源, 因为死锁 在其他地方查到没有的时候, 清除
-			_resource_map.erase(i++);
-		}
-		else
-		{
-			p->get_connection().send_message(mess);
-			++i;
-		}
+		server::swi_load();
 	}
 }
 

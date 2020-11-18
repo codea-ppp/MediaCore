@@ -126,8 +126,7 @@ int main(int argc, char* argv[])
 
 	for (auto i = lb.begin(); i != lb.end(); ++i)
 	{
-		connection fake_conn(-1, i->second.first, i->second.second);
-		loadbalance::get_instance()->set_loadbalance_map(i->first, fake_conn, false);
+		loadbalance::get_instance()->set_loadbalance_map(i->first, i->second.first, i->second.second, false);
 	}
 
 	loadbalance::get_instance()->listening(port, sid);
