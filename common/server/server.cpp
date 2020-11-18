@@ -152,9 +152,7 @@ void server::erase_client_map(const connection conn)
 void server::rolling_client_map()
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
-
-	int n;
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
 		std::lock_guard<std::mutex> lk(_client_2_is_connect_map_lock);
@@ -164,16 +162,30 @@ void server::rolling_client_map()
 			std::pair<uint32_t, uint16_t> ip_port = i->first;
 			std::pair<bool, uint32_t> connected_sid = i->second;
 
-			if (ip_port.first) 
+			uint32_t ip		= ip_port.first;
+			uint32_t port	= ip_port.second;
+
+			bool is_skip		= false;
+			char ip_buffer[16]	= { 0 }; 
+			snprintf(ip_buffer, 16, "%u.%u.%u.%u", (ip & 0x000000ff), (ip & 0x0000ff00) >> 8, (ip & 0x00ff0000) >> 16, (ip & 0xff000000) >> 24);
+
+			if (connected_sid.first) 
 			{
 				_client_sids.push_back(connected_sid.second);
 				continue;
 			}
 
-			if (_client_sids.end() != std::find(_client_sids.begin(), _client_sids.end(), n)) continue;
+			for (auto i = _client_sids.begin(); i != _client_sids.end(); ++i)
+			{
+				if (*i == connected_sid.second) 
+				{
+					dzlog_info("skip %s:%d", ip_buffer, ntohs(port));
+					is_skip = true;
+					break;
+				}
+			}
 
-			uint32_t ip		= i->first.first;
-			uint32_t port	= i->first.second;
+			if (is_skip) continue;
 
 			if (net_message_listener::get_instance()->connect_with_message(ip, port, mess))
 			{
@@ -232,7 +244,7 @@ void server::erase_loadbalance_map(const connection conn)
 void server::rolling_loadbalance_map()
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
 		std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
@@ -257,6 +269,7 @@ void server::rolling_loadbalance_map()
 				{
 					dzlog_info("skip %s:%d", ip_buffer, ntohs(port));
 					is_skip = true;
+					break;
 				}
 			}
 
@@ -319,9 +332,7 @@ void server::erase_resource_map(const connection conn)
 void server::rolling_resource_map()
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
-
-	int n;
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
 		std::lock_guard<std::mutex> lk(_resource_2_is_connect_map_lock);
@@ -331,16 +342,32 @@ void server::rolling_resource_map()
 			std::pair<uint32_t, uint16_t> ip_port = i->first;
 			std::pair<bool, uint32_t> connected_sid = i->second;
 
+			uint32_t ip		= i->first.first;
+			uint32_t port	= i->first.second;
+
 			if (ip_port.first) 
 			{
 				_resource_sids.push_back(connected_sid.second);
 				continue;
 			}
 
-			if (_resource_sids.end() != std::find(_resource_sids.begin(), _resource_sids.end(), n)) continue;
+			bool is_skip		= false;
+			char ip_buffer[16]	= { 0 }; 
+			snprintf(ip_buffer, 16, "%u.%u.%u.%u", (ip & 0x000000ff), (ip & 0x0000ff00) >> 8, (ip & 0x00ff0000) >> 16, (ip & 0xff000000) >> 24);
 
-			uint32_t ip		= i->first.first;
-			uint32_t port	= i->first.second;
+			if (connected_sid.first) continue;
+
+			for (auto i = _resource_sids.begin(); i != _resource_sids.end(); ++i)
+			{
+				if (*i == connected_sid.second) 
+				{
+					dzlog_info("skip %s:%d", ip_buffer, ntohs(port));
+					is_skip = true;
+					break;
+				}
+			}
+
+			if (is_skip) continue;
 
 			if (net_message_listener::get_instance()->connect_with_message(ip, port, mess))
 			{
@@ -360,9 +387,9 @@ void server::rolling_map()
 {
 	while (_status)
 	{
-		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_client_map, this));
-		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_loadbalance_map, this));
-		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_resource_map, this));
+		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_client_map,		this));
+		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_loadbalance_map,	this));
+		threadpool_instance::get_instance()->schedule(std::bind(&server::rolling_resource_map,		this));
 		
 		std::this_thread::sleep_for(std::chrono::seconds(5));
 	}

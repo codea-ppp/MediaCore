@@ -154,10 +154,11 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 	const int sock = conn.show_sockfd();
 
 	uint32_t tid, sid; 
+	uint16_t listening_port;
 	uint8_t	count;
 	int	ret;
 
-	mess->give_me_data(tid, sid, count);
+	mess->give_me_data(tid, sid, listening_port, count);
 
 	int type = tell_me_type(sid);
 	if (type != PEER_TYPE_CLIENT && type != PEER_TYPE_LOADBALANCE && type != PEER_TYPE_RESOURCE)
@@ -170,7 +171,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 	{
 	// 新注册的负载均衡应该发给所有的客户端和视频资源
 	case PEER_TYPE_LOADBALANCE:
-		ret = fresh_or_insert_loadbalance(sock, conn, sid);
+		ret = fresh_or_insert_loadbalance(sock, conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
@@ -185,7 +186,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 
 	// 新注册的视频资源应该拉取视频目录
 	case PEER_TYPE_RESOURCE:		
-		ret = fresh_or_insert_resource(sock, conn, sid);
+		ret = fresh_or_insert_resource(sock, conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
@@ -200,7 +201,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 
 	// 新注册的客户端不需要做额外的事
 	case PEER_TYPE_CLIENT:			
-		ret = fresh_or_insert_client(sock, conn, sid);
+		ret = fresh_or_insert_client(sock, conn, sid, listening_port, count);
 		if (0 == ret)
 		{
 			dzlog_info("%s:%d keepalive", conn.show_ip(), conn.show_port());
@@ -245,7 +246,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_other_
 
 			sids.push_back(temp->get_sid());
 			ips.push_back(temp->get_connection().show_ip_raw());
-			ports.push_back(temp->get_connection().show_port_raw());
+			ports.push_back(temp->get_listening_port());
 		}
 	}
 
@@ -563,7 +564,7 @@ uint32_t loadbalance::find_idle_ssrc()
 	return _ssrc_boundary;
 }
  
-int loadbalance::fresh_or_insert_client(int sock, const connection conn, const uint32_t sid)
+int loadbalance::fresh_or_insert_client(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
 {
 	std::lock_guard<std::mutex> lk(_client_map_lock);
 
@@ -572,6 +573,7 @@ int loadbalance::fresh_or_insert_client(int sock, const connection conn, const u
 		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
 
 		_client_map[sid]->fresh();
+		_client_map[sid]->set_load(load);
 		return 0;
 	}
 
@@ -581,7 +583,8 @@ int loadbalance::fresh_or_insert_client(int sock, const connection conn, const u
 		dzlog_info("mapping %d->%d already exist", sock, sid);
 	}
 
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid);
+	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
+	p->set_load(load);
 	_client_map[sid] = p;
 
 	return 1;
@@ -606,7 +609,7 @@ int loadbalance::fresh_client(int sock)
 	return 0;
 }
 
-int loadbalance::fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid)
+int loadbalance::fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
 {
 	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
 
@@ -615,6 +618,7 @@ int loadbalance::fresh_or_insert_loadbalance(int sock, const connection conn, co
 		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
 
 		_loadbalance_map[sid]->fresh();
+		_loadbalance_map[sid]->set_load(load);
 		return 0;
 	}
 
@@ -624,7 +628,8 @@ int loadbalance::fresh_or_insert_loadbalance(int sock, const connection conn, co
 		dzlog_info("mapping %d->%d already exist", sock, sid);
 	}
 
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid);
+	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
+	p->set_load(load);
 	_loadbalance_map[sid] = p;
 
 	return 1;
@@ -647,7 +652,7 @@ int loadbalance::fresh_loadbalance(int sock)
 	return 0;
 }
 
-int loadbalance::fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid)
+int loadbalance::fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
 {
 	std::lock_guard<std::mutex> lk(_resource_map_lock);
 
@@ -656,6 +661,7 @@ int loadbalance::fresh_or_insert_resource(int sock, const connection conn, const
 		dzlog_info("fresh socket %d@%s:%d", sock, conn.show_ip(), conn.show_port());
 
 		_resource_map[sid]->fresh();
+		_resource_map[sid]->set_load(load);
 		return 0;
 	}
 
@@ -665,7 +671,8 @@ int loadbalance::fresh_or_insert_resource(int sock, const connection conn, const
 		dzlog_info("mapping %d->%d already exist", sock, sid);
 	}
 
-	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid);
+	std::shared_ptr<peer> p = std::make_shared<peer>(conn, sid, listening_port);
+	p->set_load(load);
 	_resource_map[sid] = p;
 
 	return 1;
@@ -706,7 +713,7 @@ void loadbalance::shoting_dead()
 void loadbalance::shoting_client()
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	std::lock_guard<std::mutex> lk(_client_map_lock);
 
@@ -736,7 +743,7 @@ void loadbalance::shoting_loadbalance()
 	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
 
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	std::shared_ptr<pull_other_loadbalance_message> lb_mess = std::make_shared<pull_other_loadbalance_message>();
 	lb_mess->full_data_direct(get_tid());
@@ -767,7 +774,7 @@ void loadbalance::shoting_loadbalance()
 void loadbalance::shoting_resource()
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(get_tid(), _sid, get_load());
+	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	std::lock_guard<std::mutex> lk(_resource_map_lock);
 	dzlog_info("shoting %ld resource", _resource_map.size());

@@ -1,7 +1,7 @@
 #include "peer.h"
 
-peer::peer(const connection conn, const uint32_t sid) 
-	: _conn(conn), _sid(sid), _pid(conn.show_sockfd())
+peer::peer(const connection conn, const uint32_t sid, const uint16_t listening_port) 
+	: _conn(conn), _sid(sid), _pid(conn.show_sockfd()), _listening_port(listening_port)
 {
 	_last_time_refresh = std::chrono::steady_clock::now();
 }
@@ -51,6 +51,11 @@ const uint32_t peer::get_type() const
 const uint32_t peer::get_load() const
 {
 	return _load;
+}
+
+const uint16_t peer::get_listening_port() const
+{
+	return _listening_port;
 }
 
 void peer::set_load(uint32_t load)

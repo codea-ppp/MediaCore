@@ -12,6 +12,7 @@ dis2compile = \
 	$(pwd)/common/peer \
 	$(pwd)/common/media_chain \
 	$(pwd)/common/server \
+	$(pwd)/common/ability \
 	$(pwd)/loadbalance \
 	$(pwd)/test
 

@@ -18,7 +18,7 @@ using namespace media_core_message;
 void send_keepalive(int sock)
 {
 	keepalive_message mess;
-	mess.full_data_direct(555, 234, 2);
+	mess.full_data_direct(555, 234, 3366, 2);
 	mess.send_data_to(sock);
 }
 

@@ -14,14 +14,14 @@ namespace media_core_message
 		return impl->full_data_remote(sockfd, tid);
 	}
 
-	int keepalive_message::full_data_direct(uint32_t tid, uint32_t sid, uint8_t count)
+	int keepalive_message::full_data_direct(uint32_t tid, uint32_t sid, uint16_t listening_port, uint8_t count)
 	{
-		return impl->full_data_direct(tid, sid, count);
+		return impl->full_data_direct(tid, sid, listening_port, count);
 	}
 
-	int keepalive_message::give_me_data(uint32_t& tid, uint32_t& sid, uint8_t& count)
+	int keepalive_message::give_me_data(uint32_t& tid, uint32_t& sid, uint16_t& listening_port, uint8_t& count)
 	{
-		return impl->give_me_data(tid, sid, count);
+		return impl->give_me_data(tid, sid, listening_port, count);
 	}
 	
 	int keepalive_message::tell_me_type()

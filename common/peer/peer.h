@@ -12,7 +12,7 @@
 class peer
 {
 public:
-	peer(const connection conn, const uint32_t sid);
+	peer(const connection conn, const uint32_t sid, const uint16_t listening_port);
 
 	int send_message(std::shared_ptr<media_core_message::message>);
 
@@ -25,6 +25,7 @@ public:
 	const uint32_t get_sid() const;
 	const uint32_t get_type() const;
 	const uint32_t get_load() const;
+	const uint16_t get_listening_port() const;
 	void set_load(uint32_t);
 
 private:
@@ -33,6 +34,7 @@ private:
 	const connection _conn;
 	const uint32_t _sid;
 	const uint32_t _pid;
+	const uint16_t _listening_port;
 
 	uint32_t _load;
 };

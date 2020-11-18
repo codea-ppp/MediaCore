@@ -48,13 +48,13 @@ private:
 	uint32_t find_resource_least_load();
 	uint32_t find_idle_ssrc();
 
-	int fresh_or_insert_client(int sock, const connection conn, const uint32_t sid);
+	int fresh_or_insert_client(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
 	int fresh_client(int sock);
 
-	int fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid);
+	int fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
 	int fresh_loadbalance(int sock);
 
-	int fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid);
+	int fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
 	int fresh_resource(int sock);
 
 	void shoting_dead();

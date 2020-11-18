@@ -18,7 +18,7 @@ using namespace media_core_message;
 void send_keepalive(connection conn)
 {
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
-	mess->full_data_direct(555, 234, 2);
+	mess->full_data_direct(555, 234, 3366, 2);
 	conn.send_message(mess);
 }
 
