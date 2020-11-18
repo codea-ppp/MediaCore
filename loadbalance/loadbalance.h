@@ -40,7 +40,7 @@ private:
 	int deal_message(const connection, std::shared_ptr<stop_stream_message>);							// client -> loadbalance / loadbalance -> resource
 //	int deal_message(const connection, std::shared_ptr<stream_message>);								// resource -> client
 
-	int send_new_loadbalance_2_client_resource(const connection lb);
+	int send_new_loadbalance_2_client_resource(uint32_t sid, const connection lb);
 	int send_media_menu_pulling(const connection resource);
 
 	int check_video_and_find_resource_least_load(const std::string&);
@@ -48,10 +48,20 @@ private:
 	uint32_t find_resource_least_load();
 	uint32_t find_idle_ssrc();
 
-	int fresh_or_insert_peer(int id, int type, const connection conn, const uint32_t sid);
-	int fresh_peer(int id, int type);
-	int tell_me_type(uint32_t sid);
+	int fresh_or_insert_client(int sock, const connection conn, const uint32_t sid);
+	int fresh_client(int sock);
+
+	int fresh_or_insert_loadbalance(int sock, const connection conn, const uint32_t sid);
+	int fresh_loadbalance(int sock);
+
+	int fresh_or_insert_resource(int sock, const connection conn, const uint32_t sid);
+	int fresh_resource(int sock);
+
 	void shoting_dead();
+	void shoting_client();
+	void shoting_loadbalance();
+	void shoting_resource();
+	void shoting_media_chain();
 
 	loadbalance();
 	~loadbalance();
@@ -66,9 +76,17 @@ private:
 	std::map<std::string, std::map<int, std::shared_ptr<peer>>> _video_resources;
 	std::mutex _video_resources_lock;
 
-	// socket fd for key
-	std::map<uint32_t, std::shared_ptr<peer>> _peer_map[3];
-	std::mutex _peer_map_lock[3];
+	// sid for key
+	std::map<uint32_t, std::shared_ptr<peer>> _client_map;
+	std::mutex _client_map_lock;
+
+	// sid for key
+	std::map<uint32_t, std::shared_ptr<peer>> _loadbalance_map;
+	std::mutex _loadbalance_map_lock;
+
+	// sid for key
+	std::map<uint32_t, std::shared_ptr<peer>> _resource_map;
+	std::mutex _resource_map_lock;
 
 	// ssrc for key
 	std::map<int, std::shared_ptr<media_chain>> _media_chain_map;

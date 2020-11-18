@@ -18,6 +18,8 @@ public:
 	const char*		show_ip();
 	const uint32_t	show_ip_raw();
 	const uint16_t	show_port();
+	const uint16_t	show_port_raw();
+	
 
 	connection_impl(const int sockfd, const uint32_t ip, const uint16_t port);
 	~connection_impl();

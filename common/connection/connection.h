@@ -16,6 +16,7 @@ public:
 	const char* show_ip() const;
 	const uint32_t show_ip_raw() const;
 	const uint16_t show_port() const;
+	const uint16_t show_port_raw() const;
 
 	connection(const int sockfd, const uint32_t ip, const uint16_t port);
 	~connection();

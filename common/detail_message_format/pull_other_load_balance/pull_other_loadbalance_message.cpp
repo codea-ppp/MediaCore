@@ -25,7 +25,7 @@ namespace media_core_message
 
 	int pull_other_loadbalance_message::tell_me_type()
 	{
-		return MSGTYPE_PULLMEDIAMENU;
+		return MSGTYPE_PULLOTHERLOADBALANCE;
 	}
 
 	void pull_other_loadbalance_message::print_data()

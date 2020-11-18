@@ -18,7 +18,7 @@ namespace media_core_message
 		}
 
 		uint32_t head_buffer[3];
-		head_buffer[0] = MSGTYPE_PULLMEDIAMENU;
+		head_buffer[0] = MSGTYPE_PULLOTHERLOADBALANCE;
 		head_buffer[1] = 0;
 		head_buffer[2] = _tid;
 

@@ -31,39 +31,43 @@ void send_pull_other_loadbalance(int sock)
 
 void send_respond_loadbalance_pulling(int sock)
 {
+	std::vector<uint32_t> sids;
 	std::vector<uint32_t> ip;
 	std::vector<uint16_t> port;
-	ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
-	ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
-	ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
-	ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
-	ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
-	ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
-	ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
-	ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
-	ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
+
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
 
 	respond_loadbalance_pull_message mess;
-	mess.full_data_direct(1323, ip, port);
+	mess.full_data_direct(1323, sids, ip, port);
 	mess.send_data_to(sock);
 }
 
 void send_push_loadbalance(int sock)
 {
+	std::vector<uint32_t> sids;
 	std::vector<uint32_t> ip;
 	std::vector<uint16_t> port;
-	ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
-	ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
-	ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
-	ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
-	ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
-	ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
-	ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
-	ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
-	ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
+
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.1")); port.push_back(htons(25564));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.2")); port.push_back(htons(25565));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.3")); port.push_back(htons(25566));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.4")); port.push_back(htons(25567));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.5")); port.push_back(htons(25568));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.6")); port.push_back(htons(25560));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.7")); port.push_back(htons(25544));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.8")); port.push_back(htons(25584));
+	sids.push_back(5545); ip.push_back(inet_addr("127.0.0.9")); port.push_back(htons(28564));
 
 	push_loadbalance_pull_message mess;
-	mess.full_data_direct(1234, ip, port);
+	mess.full_data_direct(1234, sids, ip, port);
 	mess.send_data_to(sock);
 }
 

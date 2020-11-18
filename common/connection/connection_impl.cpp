@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "message_type.h"
@@ -101,6 +102,11 @@ const uint32_t connection_impl::show_ip_raw()
 }
 
 const uint16_t connection_impl::show_port()
+{
+	return ntohs(_port);
+}
+
+const uint16_t connection_impl::show_port_raw()
 {
 	return _port;
 }

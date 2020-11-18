@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include "connection.h"
 #include "loadbalance.h"
 
 void print_help()
@@ -34,7 +35,7 @@ bool analysis_args(int argc, char* argv[], std::string& log_config_path, std::st
 	return true;
 }
 
-bool analysis_json(const std::string& config_path, std::vector<std::pair<uint32_t, uint16_t>>& lb, uint32_t& sid, uint16_t& port)
+bool analysis_json(const std::string& config_path, std::map<uint32_t, std::pair<uint32_t, uint16_t>>& lb, uint32_t& sid, uint16_t& port)
 {
 	std::ifstream config_file_stream(config_path, std::ifstream::binary);
 	std::string errors;
@@ -54,7 +55,9 @@ bool analysis_json(const std::string& config_path, std::vector<std::pair<uint32_
 		return false;
 	if (!json_root.isMember("other_loadbalance") || !json_root["other_loadbalance"].isArray())
 		return false;
-	if (!json_root["other_loadbalance"].isValidIndex(1))
+	if (!json_root["other_loadbalance"].isValidIndex(0))
+		return false;
+	if (!json_root["other_loadbalance"][0].isMember("sid") || !json_root["other_loadbalance"][0]["sid"].isInt())
 		return false;
 	if (!json_root["other_loadbalance"][0].isMember("ip") || !json_root["other_loadbalance"][0]["ip"].isString())
 		return false;
@@ -66,15 +69,17 @@ bool analysis_json(const std::string& config_path, std::vector<std::pair<uint32_
 	sid	 = json_root["sid"].asInt();
 	port = json_root["port"].asInt();
 
+	uint32_t	other_lb_sid;
 	std::string other_lb_ip;
-	int other_lb_port;
+	uint16_t	other_lb_port;
 
 	struct sockaddr_in addr;
 
 	for (unsigned int i = 0; i < json_root["other_loadbalance"].size(); ++i)
 	{
+		other_lb_sid	= json_root["other_loadbalance"][i]["sid"].asInt();
 		other_lb_ip		= json_root["other_loadbalance"][i]["ip"].asString();
-		other_lb_port	= json_root["other_loadbalance"][i]["port"].asInt();
+		other_lb_port	= htons(json_root["other_loadbalance"][i]["port"].asInt());
 
 		dzlog_info("other loadbalance %s:%d", other_lb_ip.c_str(), other_lb_port);
 
@@ -84,7 +89,8 @@ bool analysis_json(const std::string& config_path, std::vector<std::pair<uint32_
 			return false;
 		}
 	
-		lb.push_back(std::make_pair(addr.sin_addr.s_addr, htons(other_lb_port)));
+		std::pair<uint32_t, uint16_t> v = std::make_pair(addr.sin_addr.s_addr, other_lb_port);
+		lb[other_lb_sid] = v;
 	}
 
 	return true;
@@ -110,7 +116,7 @@ int main(int argc, char* argv[])
 
 	uint32_t sid;
 	uint16_t port;	// 这个 port 不要 hton
-	std::vector<std::pair<uint32_t, uint16_t>> lb; // 这里的 port 是要 hton 的
+	std::map<uint32_t, std::pair<uint32_t, uint16_t>> lb; // 这里的 port 是要 hton 的
 
 	if (!analysis_json(server_config_path, lb, sid, port))
 	{
@@ -120,7 +126,8 @@ int main(int argc, char* argv[])
 
 	for (auto i = lb.begin(); i != lb.end(); ++i)
 	{
-		loadbalance::get_instance()->set_lb_map(i->first, i->second, false);
+		connection fake_conn(-1, i->second.first, i->second.second);
+		loadbalance::get_instance()->set_loadbalance_map(i->first, fake_conn, false);
 	}
 
 	loadbalance::get_instance()->listening(port, sid);

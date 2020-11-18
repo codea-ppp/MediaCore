@@ -13,14 +13,14 @@ namespace media_core_message
 		return impl->full_data_remote(sockfd, tid, length);
 	}
 
-	int respond_loadbalance_pull_message::full_data_direct(uint32_t tid, const std::vector<uint32_t>& ips, const std::vector<uint16_t>& ports)
+	int respond_loadbalance_pull_message::full_data_direct(uint32_t tid, const std::vector<uint32_t>& sids, const std::vector<uint32_t>& ips, const std::vector<uint16_t>& ports)
 	{
-		return impl->full_data_direct(tid, ips, ports);
+		return impl->full_data_direct(tid, sids, ips, ports);
 	}
 
-	int respond_loadbalance_pull_message::give_me_data(uint32_t& tid, std::vector<uint32_t>& ips, std::vector<uint16_t>& ports)
+	int respond_loadbalance_pull_message::give_me_data(uint32_t& tid, std::vector<uint32_t>& sids, std::vector<uint32_t>& ips, std::vector<uint16_t>& ports)
 	{
-		return impl->give_me_data(tid, ips, ports);
+		return impl->give_me_data(tid, sids, ips, ports);
 	}
 
 	int respond_loadbalance_pull_message::tell_me_type()

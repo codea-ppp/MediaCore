@@ -31,6 +31,11 @@ const uint16_t connection::show_port() const
 	return impl->show_port();
 }
 
+const uint16_t connection::show_port_raw() const
+{
+	return impl->show_port_raw();
+}
+
 connection::connection(const int sockfd, const uint32_t ip, const uint16_t port)
 {
 	impl = std::make_shared<connection_impl>(sockfd, ip, port);

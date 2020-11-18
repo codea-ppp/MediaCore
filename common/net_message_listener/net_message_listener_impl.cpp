@@ -2,18 +2,20 @@
 #include <thread>
 #include <chrono>
 #include <zlog.h>
+#include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "net_message_listener_impl.h"
 
 using namespace media_core_message;
 
-#define MAX_CONNECTION_PENDING 10
+#define MAX_CONNECTION_PENDING 2
 
 net_message_listener_impl* const net_message_listener_impl::get_instance()
 {
@@ -40,28 +42,33 @@ void net_message_listener_impl::set_callback(void (*message_2_go)(const connecti
 int net_message_listener_impl::connect_with_message(uint32_t ip, uint16_t port, std::shared_ptr<media_core_message::message> mess)
 {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-	struct sockaddr_in addr;
-	addr.sin_family	= AF_INET;
-	addr.sin_port	= port;
-
-	if (inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr) <= 0)
+	if (sockfd == -1)
 	{
-		dzlog_error("failed to convern ip");
+		dzlog_error("create socket failed errno: %d", errno);
 		return -1;
 	}
-	
-	if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)))
+
+	char ip_buffer[16] = { 0 };
+	snprintf(ip_buffer, 16, "%u.%u.%u.%u", (ip & 0x000000ff), (ip & 0x0000ff00) >> 8, (ip & 0x00ff0000) >> 16, (ip & 0xff000000) >> 24);
+
+	struct sockaddr_in			peer_addr; 
+	peer_addr.sin_addr.s_addr	= ip;
+	peer_addr.sin_family		= AF_INET;
+	peer_addr.sin_port			= port;
+
+	if (connect(sockfd, (struct sockaddr*)&peer_addr, sizeof(peer_addr)))
 	{
-		dzlog_error("connect failed, errno: %d", errno);
+		dzlog_error("connect to %s:%d failed, errno: %d", ip_buffer, ntohs(port), errno);
 		return -1;
 	}
 
 	connection conn(sockfd, ip, port);
 	conn.send_message(mess);
 
+	dzlog_info("connect to %s:%d", conn.show_ip(), conn.show_port());
+
 	threadpool_instance::get_instance()->schedule(std::bind(&net_message_listener_impl::_rolling, this, conn));
-	return 0;
+	return sockfd;
 }
 
 int net_message_listener_impl::listening(uint16_t port)
@@ -151,9 +158,9 @@ void net_message_listener_impl::_listening()
 
 void net_message_listener_impl::_rolling(const connection conn)
 {
-	if (!_status)
+	if (!_status) 
 	{
-		dzlog_error("_status == 0");
+		dzlog_info("%s:%d end", conn.show_ip(), conn.show_port());
 		return;
 	}
 
@@ -163,23 +170,21 @@ void net_message_listener_impl::_rolling(const connection conn)
 		return;
 	}
 
-	while (_status)
+	std::shared_ptr<message> mess;
+
+	if (conn.give_message(mess))
 	{
-		std::shared_ptr<message> mess;
-
-		if (conn.give_message(mess))
-		{
-			dzlog_error("failed to get message for %s:%d", conn.show_ip(), conn.show_port());
-			return;
-		}
-
-		_message_2_go(conn, mess->tell_me_type(), mess);
-
-		dzlog_info("rolling for %s:%d end", conn.show_ip(), conn.show_port());
-		std::this_thread::sleep_for(std::chrono::milliseconds(3));
+		dzlog_error("failed to get message for %s:%d", conn.show_ip(), conn.show_port());
+		return;
 	}
 
-	dzlog_info("end connection %s:%d", conn.show_ip(), conn.show_port());
+	_message_2_go(conn, mess->tell_me_type(), mess);
+
+	dzlog_info("rolling for %s:%d end", conn.show_ip(), conn.show_port());
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(3));
+
+	threadpool_instance::get_instance()->schedule(std::bind(&net_message_listener_impl::_rolling, this, conn));
 }
 
 net_message_listener_impl::net_message_listener_impl()
