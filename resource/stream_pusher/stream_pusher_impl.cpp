@@ -111,6 +111,7 @@ int stream_pusher_impl::set_video(uint32_t tid, uint32_t ssrc, const std::string
 			_av_codec_context->pix_fmt, 
 			_av_codec_context->width, _av_codec_context->height, 
 			AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
+
 	if (_sws_context == nullptr)
 	{
 		dzlog_error("sws context alloc failed");
@@ -127,10 +128,10 @@ int stream_pusher_impl::set_video(uint32_t tid, uint32_t ssrc, const std::string
 	return 0;
 }
 
-int stream_pusher_impl::tell_me_size(uint32_t& h, uint32_t& w)
+int stream_pusher_impl::tell_me_size(uint32_t& w, uint32_t& h)
 {
-	h = _h;
 	w = _w;
+	h = _h;
 
 	return 0;
 }
@@ -236,6 +237,12 @@ void stream_pusher_impl::waiting_trigger(const connection conn)
 
 void stream_pusher_impl::streaming(const connection conn)
 {
+	if (_status != STATUS_STREAMING)
+	{
+		clear();
+		return;
+	}
+
 	std::shared_ptr<media_core_message::stream_message> mess = std::make_shared<media_core_message::stream_message>();
 
 	while(av_read_frame(_av_format_context, _av_packet) >= 0)
@@ -262,6 +269,20 @@ void stream_pusher_impl::streaming(const connection conn)
 
 		av_packet_unref(_av_packet);
 	}
+}
+
+bool stream_pusher_impl::is_expires()
+{
+	if (_status == STATUS_STREAMING)
+		return false;
+
+	return (std::chrono::steady_clock::now() - _last_time_fresh) > std::chrono::seconds(300);
+}
+
+void stream_pusher_impl::stop()
+{
+	_status = STATUS_STOPING;
+	dzlog_info("stoping stream %d", _ssrc);
 }
 
 stream_pusher_impl::stream_pusher_impl()

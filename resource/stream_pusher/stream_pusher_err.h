@@ -1,10 +1,11 @@
 #ifndef STREAM_PUSHER_ERROR_H_
 #define STREAM_PUSHER_ERROR_H_
 
-#define STATUS_STANDBY					0
-#define STATUS_PENDING					1
-#define STATUS_LISTENING				2
-#define STATUS_STREAMING				3
+#define STATUS_STANDBY						0
+#define STATUS_PENDING						1
+#define STATUS_LISTENING					2
+#define STATUS_STREAMING					3
+#define STATUS_STOPING						4
 
 #define ERR_CANNOT_OPEN_VIDEO				-1
 #define ERR_VIDEO_FORMAT_INVAILD			-2

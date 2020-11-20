@@ -21,6 +21,8 @@ public:
 	int set_video(uint32_t tid, uint32_t ssrc, const std::string& video_name);
 	int tell_me_size(uint32_t& w, uint32_t& h);
 	int listening(uint16_t send_port);
+	bool is_expires();
+	void stop();
 
 	stream_pusher_impl();
 	~stream_pusher_impl();
@@ -35,14 +37,14 @@ private:
 
 	std::atomic_int		_status;
 	std::string			_video_name;
-	uint32_t	_h, _w;
-	uint32_t	_tid;
-	uint32_t	_ssrc;
-	uint16_t	_port;
-	double		_sleep_time;
-	int			_video_stream_index;
+	uint32_t			_w, _h;
+	uint32_t			_tid;
+	uint32_t			_ssrc;
+	uint16_t			_port;
+	double				_sleep_time;
+	int					_video_stream_index;
 
-	uint8_t*	_buffer;
+	uint8_t*			_buffer;
 	
 	AVFormatContext*	_av_format_context;
 	AVCodecContext*		_av_codec_context;

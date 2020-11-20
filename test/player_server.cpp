@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "stream_pusher_impl.h"
+#include "stream_pusher.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
 	dzlog_init("../zlog.config", "resource");
 
-	stream_pusher_impl test;
+	stream_pusher test;
 	test.set_video(444, 666, video);
 	test.listening(htons(5523));
 	

@@ -28,11 +28,20 @@ void stream_render_impl::triggering(uint32_t tid, uint32_t ssrc, uint32_t ip, ui
 	connection conn(sockfd, ip, send_port);
 	conn.send_message(mess);
 
+	_status = 1;
+
 	threadpool_instance::get_instance()->schedule(std::bind(&stream_render_impl::_rendering, this, conn));
+}
+
+void stream_render_impl::stop()
+{
+	_status = 0;
 }
 
 stream_render_impl::stream_render_impl(const std::string& video_name, const int w, const int h)
 {
+	_status = 0;
+
     SDL_Init(SDL_INIT_EVERYTHING);
 
     _sdl_window	= SDL_CreateWindow(video_name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -69,15 +78,21 @@ stream_render_impl::stream_render_impl(const std::string& video_name, const int 
 
 stream_render_impl::~stream_render_impl()
 {
-    SDL_DestroyTexture(_sdl_texture);
-    SDL_DestroyRenderer(_sdl_render);
-    SDL_DestroyWindow(_sdl_window);
-
-    SDL_Quit();
+	clear();
 }
 
 void stream_render_impl::_rendering(const connection conn)
 {
+	if (!_status)
+		return;
+
+	SDL_PollEvent(&_sdl_event);
+	switch(_sdl_event.type)
+	{
+		case SDL_QUIT:		clear();	return;
+		default: break;
+	}
+
 	std::shared_ptr<media_core_message::message> mess;
 	if (conn.give_message(mess))
 	{
@@ -95,8 +110,8 @@ void stream_render_impl::_rendering(const connection conn)
 	dzlog_info("recving frame");
 
 	uint32_t tid; 
-	uint8_t* YUV[3] = { 0, 0, 0 }; 
-	uint32_t YUV_length[3] = { 0, 0, 0 };
+	uint8_t* YUV[3]			= { 0, 0, 0 }; 
+	uint32_t YUV_length[3]	= { 0, 0, 0 };
 
 	std::shared_ptr<media_core_message::stream_message> stream_message = 
 		std::dynamic_pointer_cast<media_core_message::stream_message>(mess);
@@ -120,3 +135,11 @@ void stream_render_impl::_rendering(const connection conn)
 	threadpool_instance::get_instance()->schedule(std::bind(&stream_render_impl::_rendering, this, conn));
 }
 
+void stream_render_impl::clear()
+{
+    SDL_DestroyTexture(_sdl_texture);
+    SDL_DestroyRenderer(_sdl_render);
+    SDL_DestroyWindow(_sdl_window);
+
+    SDL_Quit();
+}
