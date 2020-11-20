@@ -146,22 +146,6 @@ void send_client_trigger(connection conn)
 	conn.send_message(mess);
 }
 
-void send_stream(connection conn)
-{
-	static uint8_t buffer[1024][3];
-	uint32_t length[3] = { 1024, 1024, 1024 };
-
-	uint8_t* value[3];
-
-	value[0] = buffer[0];	memset(value[0], 33, 1024);
-	value[1] = buffer[1];	memset(value[1], 34, 1024);
-	value[2] = buffer[2];	memset(value[2], 35, 1024);
-
-	std::shared_ptr<stream_message> mess = std::make_shared<stream_message>();
-	mess->full_data_direct(234234, value, length);
-	conn.send_message(mess);
-}
-
 void send_stop_stream(connection conn)
 {
 	std::shared_ptr<stop_stream_message> mess = std::make_shared<stop_stream_message>();
@@ -217,7 +201,7 @@ void send_something(connection conn)
 		send_client_trigger(conn);
 
 //			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
-		send_stream(conn);
+//		send_stream(conn);	// stream 使用 player_client 测试
 
 //			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
 		send_stop_stream(conn);

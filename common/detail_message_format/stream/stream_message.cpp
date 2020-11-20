@@ -13,9 +13,9 @@ namespace media_core_message
 		return impl->full_data_remote(sockfd, tid);
 	}
 
-	int stream_message::full_data_direct(uint32_t tid, uint8_t* YUV[3], uint32_t YUV_length[3])
+	int stream_message::full_data_direct(uint32_t tid, uint8_t* YUV[3], uint32_t YUV_length[3], uint32_t height)
 	{
-		return impl->full_data_direct(tid, YUV, YUV_length);
+		return impl->full_data_direct(tid, YUV, YUV_length, height);
 	}
 
 	int stream_message::give_me_data(uint32_t& tid, uint8_t* must_be_nullptr[3], uint32_t YUV_length[3])

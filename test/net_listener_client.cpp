@@ -146,23 +146,6 @@ void send_client_trigger(int sock)
 	mess.send_data_to(sock);
 }
 
-void send_stream(int sock)
-{
-	uint32_t length[3] = { 1024, 720, 720 };
-	uint8_t* value[3];
-	value[0] = new uint8_t[1024];	memset(value[0], 33, 1024);
-	value[1] = new uint8_t[720];	memset(value[1], 34, 720);
-	value[2] = new uint8_t[720];	memset(value[2], 35, 720);
-
-	stream_message mess;
-	mess.full_data_direct(234234, value, length);
-	mess.send_data_to(sock);
-
-	delete value[0];
-	delete value[1];
-	delete value[2];
-}
-
 void send_stop_stream(int sock)
 {
 	stop_stream_message mess;
@@ -240,7 +223,7 @@ void send_something()
 			send_client_trigger(sockfd);
 
 //			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
-			send_stream(sockfd);
+//			send_stream(sockfd);	// stream 用 player_client 测试
 
 //			std::this_thread::sleep_for(std::chrono::milliseconds(10)); 
 			send_stop_stream(sockfd);

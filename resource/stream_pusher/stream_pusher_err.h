@@ -1,0 +1,22 @@
+#ifndef STREAM_PUSHER_ERROR_H_
+#define STREAM_PUSHER_ERROR_H_
+
+#define STATUS_STANDBY					0
+#define STATUS_PENDING					1
+#define STATUS_LISTENING				2
+#define STATUS_STREAMING				3
+
+#define ERR_CANNOT_OPEN_VIDEO				-1
+#define ERR_VIDEO_FORMAT_INVAILD			-2
+#define ERR_BUSY							-3
+#define ERR_NO_STREAM_INDEX					-4
+#define ERR_CANNOT_FIND_CODEC				-5
+#define ERR_AVCODEC_CONTEXT_ALLOC_FAILED	-6
+#define ERR_AVCODEC_OPEN_FAILED				-7
+#define ERR_AV_FRAME_ALLOC_FAILED			-8
+#define	ERR_NET_FAILED						-9
+#define ERR_AV_PACKET_ALLOC_FAILED			-10
+#define ERR_FALIED_TO_SET_PARA				-11
+#define ERR_SWS_ALLOC_FAILED				-12
+
+#endif 
