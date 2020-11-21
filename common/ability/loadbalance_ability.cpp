@@ -46,13 +46,16 @@ int loadbalance_ability::fresh_or_insert_loadbalance(const connection conn, cons
 int loadbalance_ability::fresh_loadbalance(int sock)
 {
 	uint32_t sid = loadbalance_sockfd_2_sid(sock);
+	if (sid == -1)
+		return -1;
 
 	{
 		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
 
 		if (!_loadbalance_map.count(sid))
 		{
-			return -1;
+			dzlog_error("cannot find lb by sid: %d", sid);
+			return -2;
 		}
 	}
 
@@ -102,6 +105,25 @@ void loadbalance_ability::set_loadbalance_map(uint32_t sid, uint32_t ip, uint16_
 	_loadbalance_2_is_connect_map[k] = v;
 }
 
+void loadbalance_ability::set_loadbalance_map(std::vector<uint32_t> sids, std::vector<uint32_t> ips, std::vector<uint16_t> ports, bool is_connect)
+{
+	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+
+	for (unsigned int i = 0; i < sids.size(); ++i)
+	{
+		uint32_t sid	= sids[i];
+		uint32_t ip		= ips[i];
+		uint16_t port	= ports[i];
+
+		std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, port);
+		std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
+
+		_loadbalance_2_is_connect_map[k] = v;
+
+		dzlog_info("get lb %d", sid);
+	}
+}
+
 void loadbalance_ability::set_new_loadbalance_map(uint32_t sid, uint32_t ip, uint16_t port, bool is_connect)
 {
 	if (sid == _sid) return;
@@ -118,6 +140,40 @@ void loadbalance_ability::set_new_loadbalance_map(uint32_t sid, uint32_t ip, uin
 	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
 	if (_loadbalance_2_is_connect_map.count(k)) return;
 	_loadbalance_2_is_connect_map[k] = v;
+}
+
+void loadbalance_ability::set_new_loadbalance_map(std::vector<uint32_t> sids, std::vector<uint32_t> ips, std::vector<uint16_t> ports, bool is_connect)
+{
+	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+
+	for (unsigned int i = 0; i < sids.size(); ++i)
+	{
+		bool same_one	= false;
+
+		uint32_t sid	= sids[i];
+		uint32_t ip		= ips[i];
+		uint16_t port	= ports[i];
+
+		if (sid == _sid) continue;
+
+		std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, htons(port));
+		std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
+
+		for (auto j = _self_ip.begin(); j != _self_ip.end(); ++j)
+		{
+			if (htons(_self_port) != port) break;
+			if (*j == ip)
+			{
+				same_one = true;
+				break;
+			}
+		}
+
+		if (same_one) continue;
+
+		if (_loadbalance_2_is_connect_map.count(k)) continue;
+		_loadbalance_2_is_connect_map[k] = v;
+	}
 }
 
 void loadbalance_ability::erase_loadbalance_map(uint32_t ip, uint16_t port)
@@ -194,6 +250,23 @@ int loadbalance_ability::loadbalance_sockfd_2_sid(int sock)
 	}
 
 	return _sock_2_sid[sock];
+}
+
+int loadbalance_ability::loadbalance_sockfd_2_sid(std::vector<uint32_t>& lbsids, const std::vector<uint32_t>& lbfds)
+{
+	std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+	for (auto i = lbfds.begin(); i != lbfds.end(); ++i)
+	{
+		if (!_sock_2_sid.count(*i))
+		{
+			dzlog_error("cannot find sid by socket %d", *i);
+			continue;
+		}
+
+		lbsids.push_back(_sock_2_sid[*i]);
+	}
+
+	return 0;
 }
 
 int loadbalance_ability::insert_loadbalance_sock_sid(int sock, uint32_t sid)

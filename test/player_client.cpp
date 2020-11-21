@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
 	std::string video("../resource/videos/test_video.mp4");
 	stream_render test(video, 1280, 720);
-	test.triggering(444, 666, a.s_addr, htons(5523));
+	test.triggering(444, 444, a.s_addr, 11149);
 
 	while (true)
 		std::this_thread::sleep_for(std::chrono::seconds(10));

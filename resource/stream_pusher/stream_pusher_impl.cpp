@@ -9,7 +9,7 @@
 #include "stream_pusher_impl.h"
 #include "threadpool_instance.h"
 
-int stream_pusher_impl::set_video(uint32_t tid, uint32_t ssrc, const std::string& video_name)
+int stream_pusher_impl::set_video(uint32_t tid, uint32_t ssrc, const std::string& video_name, void (*streaming_end_callback)(uint32_t))
 {
 	int expect = STATUS_STANDBY;
 	if (!std::atomic_compare_exchange_strong(&_status, &expect, STATUS_PENDING))
@@ -106,24 +106,20 @@ int stream_pusher_impl::set_video(uint32_t tid, uint32_t ssrc, const std::string
 		return ERR_AV_PACKET_ALLOC_FAILED;
 	}
 
-	_sws_context = sws_getContext(
-			_av_codec_context->width, _av_codec_context->height, 
-			_av_codec_context->pix_fmt, 
-			_av_codec_context->width, _av_codec_context->height, 
-			AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
-
+	_sws_context = sws_getContext(_av_codec_context->width, _av_codec_context->height, _av_codec_context->pix_fmt, _av_codec_context->width, _av_codec_context->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, 0, 0, 0);
 	if (_sws_context == nullptr)
 	{
 		dzlog_error("sws context alloc failed");
 		return ERR_SWS_ALLOC_FAILED;
 	}
 
-	_sleep_time = (1.00 / av_q2d(_av_format_context->streams[_video_stream_index]->r_frame_rate) * 1000000 - 1000);
-	_video_name = video_name;
-	_ssrc		= ssrc;
-	_tid		= tid;
-	_w			= _av_codec_context->width;
-	_h			= _av_codec_context->height;
+	_streaming_end_callback = streaming_end_callback;
+	_sleep_time				= (1.00 / av_q2d(_av_format_context->streams[_video_stream_index]->r_frame_rate) * 1000000 - 1000);
+	_video_name				= video_name;
+	_ssrc					= ssrc;
+	_tid					= tid;
+	_w						= _av_codec_context->width;
+	_h						= _av_codec_context->height;
 
 	return 0;
 }
@@ -136,7 +132,7 @@ int stream_pusher_impl::tell_me_size(uint32_t& w, uint32_t& h)
 	return 0;
 }
 
-int stream_pusher_impl::listening(uint16_t send_port)
+int stream_pusher_impl::listening(uint16_t& send_port)
 {
 	int expect = STATUS_PENDING;
 	if (!std::atomic_compare_exchange_strong(&_status, &expect, STATUS_LISTENING))
@@ -150,13 +146,12 @@ int stream_pusher_impl::listening(uint16_t send_port)
 		return ERR_NET_FAILED;
 	}
 
-	struct sockaddr_in my_sock, peer_sock;
-	memset(&my_sock,	0, sizeof(struct sockaddr_in));
-	memset(&peer_sock,	0, sizeof(struct sockaddr_in));
+	struct sockaddr_in my_sock;
+	memset(&my_sock, 0, sizeof(struct sockaddr_in));
 
 	my_sock.sin_addr.s_addr	= INADDR_ANY;
 	my_sock.sin_family		= AF_INET;
-	my_sock.sin_port		= send_port;
+	my_sock.sin_port		= 0;
 
 	if (bind(sockfd, (struct sockaddr*)&my_sock, sizeof(my_sock)))
 	{
@@ -164,12 +159,32 @@ int stream_pusher_impl::listening(uint16_t send_port)
 		clear();
 		return ERR_NET_FAILED;
 	}
+
+	socklen_t len;
+	if (getsockname(sockfd, (struct sockaddr*)&my_sock, &len))
+	{
+		dzlog_error("failed to get socked %d message, errno: %d", sockfd, errno);
+		clear();
+		return ERR_NET_FAILED;
+	}
 	
+	_port = send_port = my_sock.sin_port;
+	dzlog_info("alloc port %d", send_port);
+
+	threadpool_instance::get_instance()->schedule(std::bind(&stream_pusher_impl::listening_part2, this, sockfd));
+	return 0;
+}
+
+void stream_pusher_impl::listening_part2(int sockfd)
+{
+	struct sockaddr_in peer_sock;
+	memset(&peer_sock, 0, sizeof(struct sockaddr_in));
+
 	if (listen(sockfd, 1))
 	{
 		dzlog_error("listening to socked %d failed, errno: %d", sockfd, errno);
 		clear();
-		return ERR_NET_FAILED;
+		return;
 	}
 
 	socklen_t temp;
@@ -178,19 +193,16 @@ int stream_pusher_impl::listening(uint16_t send_port)
 	{
 		dzlog_error("accept to socked %d failed, errno: %d", sockfd, errno);
 		clear();
-		return ERR_NET_FAILED;
+		return;
 	}
 
 	connection conn(peer, peer_sock.sin_addr.s_addr, peer_sock.sin_port);
 
 	_last_time_fresh = std::chrono::steady_clock::now();
-	_port = send_port;
 
 	std::thread* p = new std::thread(std::bind(&stream_pusher_impl::waiting_trigger, this, conn));
 	p->detach();
 	delete p;
-
-	return 0;
 }
 
 void stream_pusher_impl::waiting_trigger(const connection conn)
@@ -269,6 +281,9 @@ void stream_pusher_impl::streaming(const connection conn)
 
 		av_packet_unref(_av_packet);
 	}
+
+	if (_streaming_end_callback != nullptr)
+		_streaming_end_callback(_ssrc);
 }
 
 bool stream_pusher_impl::is_expires()

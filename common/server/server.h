@@ -41,7 +41,7 @@ protected:
 	virtual int deal_message(const connection, std::shared_ptr<push_loadbalance_pull_message>);
 	virtual int deal_message(const connection, std::shared_ptr<push_media_pull_message>);
 	virtual int deal_message(const connection, std::shared_ptr<resource_server_report_message>);
-	virtual int deal_message(const connection, std::shared_ptr<resource_server_respond_media_menu_pull_message>);
+	virtual int deal_message(const connection, std::shared_ptr<resource_server_respond_media_pull_message>);
 	virtual int deal_message(const connection, std::shared_ptr<respond_loadbalance_pull_message>);
 	virtual int deal_message(const connection, std::shared_ptr<respond_media_menu_pull_message>);
 	virtual int deal_message(const connection, std::shared_ptr<stop_stream_message>);

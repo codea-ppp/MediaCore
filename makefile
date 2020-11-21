@@ -1,5 +1,6 @@
 export common_gcc_flags 	= -g3 -Wall -pthread
 export common_out_links 	= -lzlog -lboost_thread -lnet_message_listener -lmessage
+export common_server_links 	= -lserver -lability -ljsoncpp
 export stream_pusher_links 	= -lstream_pusher -lavutil -lavcodec -lavformat -lavdevice -lavfilter -lswscale	
 export stream_render_links 	= -lstream_render -lSDL2
 
@@ -19,7 +20,6 @@ dis2compile = \
 	$(pwd)/resource/stream_pusher \
 	$(pwd)/resource \
 	$(pwd)/client_demo/stream_render \
-	$(pwd)/client_demo \
 	$(pwd)/test
 
 .PHONY: all clean env

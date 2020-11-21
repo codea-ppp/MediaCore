@@ -124,7 +124,7 @@ void send_loadbalance_pull_media_stream(int sock)
 
 void send_resource_respond_media_pull(int sock)
 {
-	resource_server_respond_media_menu_pull_message mess;
+	resource_server_respond_media_pull_message mess;
 	mess.full_data_direct(32432, 1024, 720, 12342);
 	mess.send_data_to(sock);
 }

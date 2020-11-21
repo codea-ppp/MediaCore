@@ -171,7 +171,6 @@ void net_message_listener_impl::_rolling(const connection conn)
 	}
 
 	std::shared_ptr<message> mess;
-
 	if (conn.give_message(mess))
 	{
 		dzlog_error("failed to get message for %s:%d", conn.show_ip(), conn.show_port());
@@ -179,8 +178,6 @@ void net_message_listener_impl::_rolling(const connection conn)
 	}
 
 	_message_2_go(conn, mess->tell_me_type(), mess);
-
-	dzlog_info("rolling for %s:%d end", conn.show_ip(), conn.show_port());
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(3));
 

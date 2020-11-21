@@ -35,8 +35,6 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	uint32_t length	= ((uint32_t*)buffer)[1];
 	uint32_t tid	= ((uint32_t*)buffer)[2];
 
-	dzlog_info("get message head %d, %d, %d", type, length, tid);
-
 	switch (type)
 	{
 	case MSGTYPE_KEEPALIVE:
@@ -58,7 +56,7 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_LOADBALANCEPULLMEDIASTREAM:
 		mess = std::make_shared<loadbalance_pull_media_stream_message>(); break;
 	case MSGTYPE_RESOURCERESPONDMEDIAPULL:
-		mess = std::make_shared<resource_server_respond_media_menu_pull_message>(); break;
+		mess = std::make_shared<resource_server_respond_media_pull_message>(); break;
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
 		mess = std::make_shared<loadbalance_respond_media_menu_pull_message>(); break;
 	case MSGTYPE_CLIENTSTREAMTRIGGER:

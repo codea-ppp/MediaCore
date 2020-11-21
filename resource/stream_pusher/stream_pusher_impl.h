@@ -18,9 +18,10 @@ extern "C" {
 class stream_pusher_impl
 {
 public:
-	int set_video(uint32_t tid, uint32_t ssrc, const std::string& video_name);
+	int set_video(uint32_t tid, uint32_t ssrc, const std::string& video_name, void (*streaming_end_callback)(uint32_t ssrc));
+
 	int tell_me_size(uint32_t& w, uint32_t& h);
-	int listening(uint16_t send_port);
+	int listening(uint16_t& send_port);
 	bool is_expires();
 	void stop();
 
@@ -28,6 +29,7 @@ public:
 	~stream_pusher_impl();
 
 private:
+	void listening_part2(int sockfd);
 	void waiting_trigger(const connection conn);
 	void streaming(const connection conn);
 	void clear();
@@ -44,6 +46,7 @@ private:
 	double				_sleep_time;
 	int					_video_stream_index;
 
+	void				(*_streaming_end_callback)(uint32_t ssrc);
 	uint8_t*			_buffer;
 	
 	AVFormatContext*	_av_format_context;

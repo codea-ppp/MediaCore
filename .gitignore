@@ -9,4 +9,6 @@ env.sh
 *.mp4
 *.json
 zlog.config
+build-*
 all_code.txt
+config/*

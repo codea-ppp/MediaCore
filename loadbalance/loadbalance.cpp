@@ -27,15 +27,15 @@ void net_message_listener_callback(const connection conn, uint32_t message_type,
 
 	switch (message_type)
 	{
-	case MSGTYPE_KEEPALIVE:						PUSH_INTO_THREAD_POOL(keepalive_message);
-	case MSGTYPE_PULLOTHERLOADBALANCE:			PUSH_INTO_THREAD_POOL(pull_other_loadbalance_message);
-	case MSGTYPE_RESPONDLOADBALANCEPULL:		PUSH_INTO_THREAD_POOL(respond_loadbalance_pull_message);
-	case MSGTYPE_RESPONDMEDIAMENU:				PUSH_INTO_THREAD_POOL(respond_media_menu_pull_message);
-	case MSGTYPE_PUSHMEDIAMENU:					PUSH_INTO_THREAD_POOL(push_media_pull_message);
-	case MSGTYPE_CLIENTPULLMEDIASTREAM:			PUSH_INTO_THREAD_POOL(client_pull_media_stream_message);
-	case MSGTYPE_RESOURCERESPONDMEDIAPULL:		PUSH_INTO_THREAD_POOL(resource_server_respond_media_menu_pull_message);
-	case MSGTYPE_STOPSTREAM:					PUSH_INTO_THREAD_POOL(stop_stream_message);
-	case MSGTYPE_RESOURCESERVERREPORT:			PUSH_INTO_THREAD_POOL(resource_server_report_message);
+	case MSGTYPE_KEEPALIVE:						PUSH_INTO_THREAD_POOL(keepalive_message)
+	case MSGTYPE_PULLOTHERLOADBALANCE:			PUSH_INTO_THREAD_POOL(pull_other_loadbalance_message)
+	case MSGTYPE_RESPONDLOADBALANCEPULL:		PUSH_INTO_THREAD_POOL(respond_loadbalance_pull_message)
+	case MSGTYPE_RESPONDMEDIAMENU:				PUSH_INTO_THREAD_POOL(respond_media_menu_pull_message)
+	case MSGTYPE_PUSHMEDIAMENU:					PUSH_INTO_THREAD_POOL(push_media_pull_message)
+	case MSGTYPE_CLIENTPULLMEDIASTREAM:			PUSH_INTO_THREAD_POOL(client_pull_media_stream_message)
+	case MSGTYPE_RESOURCERESPONDMEDIAPULL:		PUSH_INTO_THREAD_POOL(resource_server_respond_media_pull_message)
+	case MSGTYPE_STOPSTREAM:					PUSH_INTO_THREAD_POOL(stop_stream_message)
+	case MSGTYPE_RESOURCESERVERREPORT:			PUSH_INTO_THREAD_POOL(resource_server_report_message)
 	case MSGTYPE_STREAMFRAME:
 	case MSGTYPE_LOADBALANCEPULLMEDIASTREAM:
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
@@ -316,7 +316,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 	return 0;
 }
 
-int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_server_respond_media_menu_pull_message> mess)
+int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_server_respond_media_pull_message> mess)
 {
 	const int id = conn.show_sockfd();
 	if (fresh_resource(id)) 
@@ -377,13 +377,10 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_loa
 	std::vector<uint32_t> ips; 
 	std::vector<uint16_t> ports;
 
-	if (mess->give_me_data(tid, sids, ips, ports)) return -1;
-	
-	for (unsigned int i = 0; i < ips.size(); ++i)
-	{
-		set_new_loadbalance_map(sids[i], ips[i], ports[i], false);
-	}
-	
+	if (mess->give_me_data(tid, sids, ips, ports)) 
+		return -1;
+
+	set_new_loadbalance_map(sids, ips, ports, false);
 	return 0;
 }
 
@@ -400,6 +397,8 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_med
 	uint32_t tid;
 	uint32_t sid = resource_sockfd_2_sid(id);
 
+	dzlog_info("get %ld videos", video_names.size());
+
 	mess->give_me_data(tid, video_names);
 
 	{
@@ -412,10 +411,11 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_med
 
 			std::lock_guard<std::mutex> lk(_resource_map_lock);
 			_video_resources[*i][id] = _resource_map[sid];
+
+			dzlog_info("get video: %s", i->c_str());
 		}
 	}
 
-	mess->print_data();
 	return 0;
 }
 
@@ -496,6 +496,8 @@ int loadbalance::send_media_menu_pulling(const connection resource)
 {
 	std::shared_ptr<pull_media_menu_message> mess = std::make_shared<pull_media_menu_message>();
 	mess->full_data_direct(get_tid());
+
+	dzlog_info("sending media menu pulling");
 	resource.send_message(mess);
 
 	return 0;
@@ -561,7 +563,7 @@ void loadbalance::shoting_and_rolling()
 		threadpool_instance::get_instance()->schedule(std::bind(&client_ability::shoting_client, this));
 		threadpool_instance::get_instance()->schedule(std::bind(&client_ability::rolling_client_map, this));
 
-		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::shoting_loadbalance, this));
+		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_loadbalance, this));
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::rolling_loadbalance_map, this));
 
 		threadpool_instance::get_instance()->schedule(std::bind(&resource_ability::shoting_resource, this));

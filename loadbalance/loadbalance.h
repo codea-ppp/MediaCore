@@ -29,21 +29,21 @@ private:
 	friend void net_message_listener_callback(const connection conn, uint32_t message_type, std::shared_ptr<message> ptr);
 
 	// 注释掉的是不会发到 loadbalance 的信令 
-	int deal_message(const connection, std::shared_ptr<client_pull_media_stream_message>);				// client -> loadbalance
-//	int deal_message(const connection, std::shared_ptr<client_stream_trigger_message>);					// client -> resource
-	int deal_message(const connection, std::shared_ptr<keepalive_message>);								// client/loadbalance/resource -> client/loadbalance/resource
-//	int deal_message(const connection, std::shared_ptr<loadbalance_pull_media_stream_message>);			// loadbalance -> resource
+	int deal_message(const connection, std::shared_ptr<client_pull_media_stream_message>);					// client -> loadbalance
+//	int deal_message(const connection, std::shared_ptr<client_stream_trigger_message>);						// client -> resource
+	int deal_message(const connection, std::shared_ptr<keepalive_message>);									// client/loadbalance/resource -> client/loadbalance/resource
+//	int deal_message(const connection, std::shared_ptr<loadbalance_pull_media_stream_message>);				// loadbalance -> resource
 //	int deal_message(const connection, std::shared_ptr<loadbalance_respond_media_menu_pull_message>);		// loadbalance -> client
-//	int deal_message(const connection, std::shared_ptr<pull_media_menu_message>);						// loadbalance -> resource
-	int deal_message(const connection, std::shared_ptr<pull_other_loadbalance_message>);				// client/loadbalance/resource -> loadbalance
-//	int deal_message(const connection, std::shared_ptr<push_loadbalance_pull_message>);					// loadbalance -> client/resource
-	int deal_message(const connection, std::shared_ptr<push_media_pull_message>);						// resource -> loadbalance
-	int deal_message(const connection, std::shared_ptr<resource_server_report_message>);				// resource -> loadbalance
-	int deal_message(const connection, std::shared_ptr<resource_server_respond_media_menu_pull_message>);	// resource -> loadbalance
-	int deal_message(const connection, std::shared_ptr<respond_loadbalance_pull_message>);				// loadbalance -> client/loadbalance/resource
+//	int deal_message(const connection, std::shared_ptr<pull_media_menu_message>);							// loadbalance -> resource
+	int deal_message(const connection, std::shared_ptr<pull_other_loadbalance_message>);					// client/loadbalance/resource -> loadbalance
+//	int deal_message(const connection, std::shared_ptr<push_loadbalance_pull_message>);						// loadbalance -> client/resource
+	int deal_message(const connection, std::shared_ptr<push_media_pull_message>);							// resource -> loadbalance
+	int deal_message(const connection, std::shared_ptr<resource_server_report_message>);					// resource -> loadbalance
+	int deal_message(const connection, std::shared_ptr<resource_server_respond_media_pull_message>);	// resource -> loadbalance
+	int deal_message(const connection, std::shared_ptr<respond_loadbalance_pull_message>);					// loadbalance -> client/loadbalance/resource
 	int deal_message(const connection, std::shared_ptr<respond_media_menu_pull_message>);					// resource -> loadbalance
-	int deal_message(const connection, std::shared_ptr<stop_stream_message>);							// client -> loadbalance / loadbalance -> resource
-//	int deal_message(const connection, std::shared_ptr<stream_message>);								// resource -> client
+	int deal_message(const connection, std::shared_ptr<stop_stream_message>);								// client -> loadbalance / loadbalance -> resource
+//	int deal_message(const connection, std::shared_ptr<stream_message>);									// resource -> client
 
 	int send_new_loadbalance_2_client_resource(uint32_t sid, const connection lb);
 	int send_media_menu_pulling(const connection resource);

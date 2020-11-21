@@ -124,7 +124,7 @@ void send_loadbalance_pull_media_stream(connection conn)
 
 void send_resource_respond_media_pull(connection conn)
 {
-	std::shared_ptr<resource_server_respond_media_menu_pull_message> mess = std::make_shared<resource_server_respond_media_menu_pull_message>();
+	std::shared_ptr<resource_server_respond_media_pull_message> mess = std::make_shared<resource_server_respond_media_pull_message>();
 	mess->full_data_direct(32432, 1024, 720, 12342);
 	conn.send_message(mess);
 }

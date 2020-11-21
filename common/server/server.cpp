@@ -171,7 +171,7 @@ int server::deal_message(const connection, std::shared_ptr<resource_server_repor
 	return 0;
 }
 
-int server::deal_message(const connection, std::shared_ptr<resource_server_respond_media_menu_pull_message> mess)
+int server::deal_message(const connection, std::shared_ptr<resource_server_respond_media_pull_message> mess)
 {
 	mess->print_data();
 	return 0;
