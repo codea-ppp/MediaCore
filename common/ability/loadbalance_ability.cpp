@@ -45,7 +45,7 @@ int loadbalance_ability::fresh_or_insert_loadbalance(const connection conn, cons
 
 int loadbalance_ability::fresh_loadbalance(int sock)
 {
-	uint32_t sid = loadbalance_sockfd_2_sid(sock);
+	int sid = loadbalance_sockfd_2_sid(sock);
 	if (sid == -1)
 		return -1;
 

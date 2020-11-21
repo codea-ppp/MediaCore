@@ -134,7 +134,7 @@ void send_loadbalance_respond_media_pull(int sock)
 	struct in_addr addr;
 	inet_aton("192.168.55.21", &addr);
 
-	loadbalance_respond_media_menu_pull_message mess;
+	loadbalance_respond_media_pull_message mess;
 	mess.full_data_direct(234, 9999, 1024, 720, addr.s_addr, 48);
 	mess.send_data_to(sock);
 }

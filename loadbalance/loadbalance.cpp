@@ -1,3 +1,4 @@
+#include <random>
 #include <thread>
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +29,7 @@ void net_message_listener_callback(const connection conn, uint32_t message_type,
 	switch (message_type)
 	{
 	case MSGTYPE_KEEPALIVE:						PUSH_INTO_THREAD_POOL(keepalive_message)
+	case MSGTYPE_PULLMEDIAMENU:					PUSH_INTO_THREAD_POOL(pull_media_menu_message)
 	case MSGTYPE_PULLOTHERLOADBALANCE:			PUSH_INTO_THREAD_POOL(pull_other_loadbalance_message)
 	case MSGTYPE_RESPONDLOADBALANCEPULL:		PUSH_INTO_THREAD_POOL(respond_loadbalance_pull_message)
 	case MSGTYPE_RESPONDMEDIAMENU:				PUSH_INTO_THREAD_POOL(respond_media_menu_pull_message)
@@ -41,7 +43,6 @@ void net_message_listener_callback(const connection conn, uint32_t message_type,
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
 	case MSGTYPE_CLIENTSTREAMTRIGGER:
 	case MSGTYPE_PUSHLOADBANLANCE:
-	case MSGTYPE_PULLMEDIAMENU:
 		dzlog_error("recv a message should not send to loadbalance: %d", message_type);
 		mess->print_data();
 		return;
@@ -213,6 +214,33 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<keepalive_m
 	}
 }
 
+int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_media_menu_message> mess)
+{
+	const int sock = conn.show_sockfd();
+	if (fresh_client(sock))
+	{
+		dzlog_error("recv media menu pulling from unknown client: %s:%d", conn.show_ip(), conn.show_port());
+	}
+
+	uint32_t tid;
+	mess->give_me_data(tid);
+
+	std::shared_ptr<media_core_message::respond_media_menu_pull_message> next_mess =
+		std::make_shared<media_core_message::respond_media_menu_pull_message>();
+
+	std::vector<std::string> _videos;
+
+	{
+		std::lock_guard<std::mutex> lk(_video_resources_lock);
+		for (auto i = _video_resources.begin(); i != _video_resources.end(); ++i)
+			_videos.push_back(i->first);
+	}
+
+	next_mess->full_data_direct(tid, _videos);
+	conn.send_message(next_mess);
+	return 0;
+}
+
 int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_other_loadbalance_message> mess)
 {
 	const int id = conn.show_sockfd();
@@ -319,11 +347,6 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_server_respond_media_pull_message> mess)
 {
 	const int id = conn.show_sockfd();
-	if (fresh_resource(id)) 
-	{
-		dzlog_error("get media pulling respond from unknown resource: %s:%d", conn.show_ip(), conn.show_port());
-		return -1;
-	}
 
 	uint32_t tid; 
 	uint32_t length; 
@@ -332,14 +355,22 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 
 	mess->give_me_data(tid, length, width, server_send_port);
 
-	int ssrc = get_ssrc(INDEX_SERVER, id, tid);
+	int sid = resource_sockfd_2_sid(id);
+	if (sid == -1)
+	{
+		dzlog_error("failed to find sid by socket %d", id);
+		return -1;
+	}
+
+	int ssrc = get_ssrc(INDEX_SERVER, sid, tid);
 	if (ssrc == -1)
 	{
 		dzlog_error("cannot find ssrc by [id, tid](%d, %d)", id, tid);
 		return -1;
 	}
 
-	std::shared_ptr<loadbalance_respond_media_menu_pull_message> next_mess;
+	std::shared_ptr<loadbalance_respond_media_pull_message> next_mess = 
+		std::make_shared<loadbalance_respond_media_pull_message>();
 	std::shared_ptr<media_chain> temp;
 
 	{
@@ -421,35 +452,48 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_med
 
 int loadbalance::deal_message(const connection conn, std::shared_ptr<stop_stream_message> mess)
 {
-	const int id = conn.show_sockfd();
-	if (fresh_client(id)) 
-	{
-		dzlog_error("stop stream from a unknown client: %s:%d", conn.show_ip(), conn.show_port());
-		return -1;
-	}
-
 	uint32_t tid; 
 	uint32_t ssrc;
-
 	mess->give_me_data(tid, ssrc);
 
 	std::shared_ptr<media_chain> ptr;
 
+	const int id = conn.show_sockfd();
+	if (!fresh_client(id)) 
 	{
-		std::lock_guard<std::mutex> lk(_media_chain_map_lock);
-		if (!_media_chain_map.count(ssrc))
 		{
-			dzlog_error("ssrc %d not exist", ssrc);
-			return -1;
+			std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+			if (!_media_chain_map.count(ssrc))
+			{
+				dzlog_error("ssrc %d not exist", ssrc);
+				return -1;
+			}
+
+			ptr = _media_chain_map[ssrc];
+			_media_chain_map.erase(ssrc);
 		}
 
-		ptr = _media_chain_map[ssrc];
-		_media_chain_map.erase(ssrc);
+		dzlog_info("stop stream %d", ssrc);
+		ptr->get_resource()->get_connection().send_message(mess);
+	}
+	else if (!fresh_resource(id))
+	{
+		{
+			std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+			if (!_media_chain_map.count(ssrc))
+			{
+				dzlog_error("ssrc %d not exist", ssrc);
+				return -1;
+			}
+
+			ptr = _media_chain_map[ssrc];
+			_media_chain_map.erase(ssrc);
+		}
+
+		dzlog_info("stop stream %d", ssrc);
+		ptr->get_client()->get_connection().send_message(mess);
 	}
 
-	dzlog_info("stop stream %d", ssrc);
-
-	ptr->get_resource()->get_connection().send_message(mess);
 	return 0;
 }
 
@@ -506,13 +550,13 @@ int loadbalance::send_media_menu_pulling(const connection resource)
 int loadbalance::check_video_and_find_resource_least_load(const std::string& video)
 {
 	std::lock_guard<std::mutex> lk(_video_resources_lock);
-	if (_video_resources.count(video))
+	if (!_video_resources.count(video))
 	{
 		dzlog_error("not video: %s", video.c_str());
 		return -2;
 	}
 
-	uint32_t load		= 0;
+	uint32_t load		= INT_MAX;
 	uint32_t temp_load	= 0;
 	int	resource_id		= -1;
 
@@ -552,7 +596,12 @@ uint32_t loadbalance::find_resource_least_load()
 
 uint32_t loadbalance::find_idle_ssrc()
 {
-	while (_media_chain_map.count(++_ssrc_boundary));
+	std::srand(std::time(0));
+	_ssrc_boundary = std::rand();
+
+	while (_media_chain_map.count(_ssrc_boundary))
+		_ssrc_boundary = std::rand();
+
 	return _ssrc_boundary;
 }
  

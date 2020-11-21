@@ -41,7 +41,7 @@ private:
 //	int deal_message(const connection, std::shared_ptr<client_stream_trigger_message>);						// client -> resource
 	int deal_message(const connection, std::shared_ptr<keepalive_message>);									// client/loadbalance/resource -> client/loadbalance/resource
 	int deal_message(const connection, std::shared_ptr<loadbalance_pull_media_stream_message>);				// loadbalance -> resource
-//	int deal_message(const connection, std::shared_ptr<loadbalance_respond_media_menu_pull_message>);		// loadbalance -> client
+//	int deal_message(const connection, std::shared_ptr<loadbalance_respond_media_pull_message>);		// loadbalance -> client
 	int deal_message(const connection, std::shared_ptr<pull_media_menu_message>);							// loadbalance -> resource
 //	int deal_message(const connection, std::shared_ptr<pull_other_loadbalance_message>);					// client/loadbalance/resource -> loadbalance
 	int deal_message(const connection, std::shared_ptr<push_loadbalance_pull_message>);						// loadbalance -> client/resource

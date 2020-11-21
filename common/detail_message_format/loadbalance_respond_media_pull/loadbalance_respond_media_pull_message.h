@@ -11,9 +11,9 @@
 
 namespace media_core_message
 {
-	class loadbalance_respond_media_menu_pull_message_impl;
+	class loadbalance_respond_media_pull_message_impl;
 
-	class loadbalance_respond_media_menu_pull_message : public message
+	class loadbalance_respond_media_pull_message : public message
 	{
 	public:
 		int send_data_to(int sockfd);
@@ -23,14 +23,14 @@ namespace media_core_message
 		int tell_me_type();
 		void print_data();
 
-		loadbalance_respond_media_menu_pull_message();
+		loadbalance_respond_media_pull_message();
 
 	private:
 		void init();
 		void clear();
 
 	private:
-		std::shared_ptr<loadbalance_respond_media_menu_pull_message_impl> impl;
+		std::shared_ptr<loadbalance_respond_media_pull_message_impl> impl;
 	};
 }
 

@@ -146,7 +146,7 @@ int stream_pusher_impl::listening(uint16_t& send_port)
 		return ERR_NET_FAILED;
 	}
 
-	struct sockaddr_in my_sock;
+	struct sockaddr_in my_sock, temp;
 	memset(&my_sock, 0, sizeof(struct sockaddr_in));
 
 	my_sock.sin_addr.s_addr	= INADDR_ANY;
@@ -160,15 +160,22 @@ int stream_pusher_impl::listening(uint16_t& send_port)
 		return ERR_NET_FAILED;
 	}
 
+	if (listen(sockfd, 1))
+	{
+		dzlog_error("listening to socked %d failed, errno: %d", sockfd, errno);
+		clear();
+		return ERR_NET_FAILED;
+	}
+
 	socklen_t len;
-	if (getsockname(sockfd, (struct sockaddr*)&my_sock, &len))
+	if (getsockname(sockfd, (struct sockaddr*)&temp, &len))
 	{
 		dzlog_error("failed to get socked %d message, errno: %d", sockfd, errno);
 		clear();
 		return ERR_NET_FAILED;
 	}
 	
-	_port = send_port = my_sock.sin_port;
+	_port = send_port = temp.sin_port;
 	dzlog_info("alloc port %d", send_port);
 
 	threadpool_instance::get_instance()->schedule(std::bind(&stream_pusher_impl::listening_part2, this, sockfd));
@@ -180,12 +187,7 @@ void stream_pusher_impl::listening_part2(int sockfd)
 	struct sockaddr_in peer_sock;
 	memset(&peer_sock, 0, sizeof(struct sockaddr_in));
 
-	if (listen(sockfd, 1))
-	{
-		dzlog_error("listening to socked %d failed, errno: %d", sockfd, errno);
-		clear();
-		return;
-	}
+	_last_time_fresh = std::chrono::steady_clock::now();
 
 	socklen_t temp;
 	int peer = accept(sockfd, (struct sockaddr*)&peer_sock, &temp);
@@ -197,8 +199,6 @@ void stream_pusher_impl::listening_part2(int sockfd)
 	}
 
 	connection conn(peer, peer_sock.sin_addr.s_addr, peer_sock.sin_port);
-
-	_last_time_fresh = std::chrono::steady_clock::now();
 
 	std::thread* p = new std::thread(std::bind(&stream_pusher_impl::waiting_trigger, this, conn));
 	p->detach();

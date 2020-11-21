@@ -42,8 +42,6 @@ stream_render_impl::stream_render_impl(const std::string& video_name, const int 
 {
 	_status = 0;
 
-    SDL_Init(SDL_INIT_EVERYTHING);
-
     _sdl_window	= SDL_CreateWindow(video_name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 	if (_sdl_window == nullptr)
 	{
@@ -89,7 +87,10 @@ void stream_render_impl::_rendering(const connection conn)
 	SDL_PollEvent(&_sdl_event);
 	switch(_sdl_event.type)
 	{
-		case SDL_QUIT:		clear();	return;
+		case SDL_QUIT:
+			clear();
+			return;
+
 		default: break;
 	}
 
@@ -140,6 +141,4 @@ void stream_render_impl::clear()
     SDL_DestroyTexture(_sdl_texture);
     SDL_DestroyRenderer(_sdl_render);
     SDL_DestroyWindow(_sdl_window);
-
-    SDL_Quit();
 }

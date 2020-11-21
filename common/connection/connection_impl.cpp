@@ -58,7 +58,7 @@ int connection_impl::give_message(std::shared_ptr<media_core_message::message>& 
 	case MSGTYPE_RESOURCERESPONDMEDIAPULL:
 		mess = std::make_shared<resource_server_respond_media_pull_message>(); break;
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
-		mess = std::make_shared<loadbalance_respond_media_menu_pull_message>(); break;
+		mess = std::make_shared<loadbalance_respond_media_pull_message>(); break;
 	case MSGTYPE_CLIENTSTREAMTRIGGER:
 		mess = std::make_shared<client_stream_trigger_message>(); break;
 	case MSGTYPE_STREAMFRAME:

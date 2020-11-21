@@ -4,7 +4,6 @@
 #include <fstream>
 #include <stdint.h>
 #include "client.h"
-#include "widget.h"
 #include <string.h>
 #include <json/json.h>
 #include <arpa/inet.h>
@@ -12,7 +11,6 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include "connection.h"
-#include <QApplication>
 
 void print_help()
 {
@@ -100,14 +98,11 @@ bool analysis_json(const std::string& config_path, std::map<uint32_t, std::pair<
 
 int video_update_callback(std::shared_ptr<std::vector<std::string>> update_videos)
 {
-    Widget::get_instance()->video_update_callback(update_videos);
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-
     if (argc != 5)
 	{
 		print_help();
@@ -142,6 +137,13 @@ int main(int argc, char *argv[])
     client::get_instance()->set_update_videos_callback(&video_update_callback);
 	client::get_instance()->listening(port, sid);
 
-    Widget::get_instance()->show();
-    return a.exec();
+	while (true)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(10));
+		client::get_instance()->play("test_video2.mp4");
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		client::get_instance()->play("test_video3.mp4");
+	}
+
+	return 0;
 }

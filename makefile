@@ -20,6 +20,7 @@ dis2compile = \
 	$(pwd)/resource/stream_pusher \
 	$(pwd)/resource \
 	$(pwd)/client_demo/stream_render \
+	$(pwd)/client_demo/client_cli \
 	$(pwd)/test
 
 .PHONY: all clean env

@@ -32,7 +32,7 @@ void net_message_listener_callback(const connection conn, uint32_t message_type,
 	case MSGTYPE_RESOURCESERVERREPORT:
 	case MSGTYPE_STREAMFRAME:
 	case MSGTYPE_LOADBALANCERESPONDMEDIAPULL:
-		dzlog_error("recv a message should not send to loadbalance: %d", message_type);
+		dzlog_error("recv a message should not send to resource: %d", message_type);
 		mess->print_data();
 		return;
 
@@ -65,13 +65,12 @@ void resource_server::set_video_path(const std::string& video_path)
 
 int resource_server::listening(uint16_t port, uint32_t sid)
 {
+	_status		= 1;
 	_self_port	= port;
 	_sid		= sid;
 
 	net_message_listener::get_instance()->set_callback(net_message_listener_callback);
 	net_message_listener::get_instance()->listening(port);
-
-	_status = 1;
 
 	std::thread* p = new std::thread(&resource_server::rolling, this);
 	p->detach();
@@ -313,13 +312,17 @@ int resource_server::deal_message(const connection conn, std::shared_ptr<loadbal
 	uint32_t	w, h;
 	uint16_t	client_recv_port; 
 	std::string video_name;
+	std::string video_name_absolute = _videos_path;
 
 	mess->give_me_data(tid, client_recv_port, ssrc, video_name);
+	video_name_absolute.append(video_name);
+
+	dzlog_info("set video: %s", video_name_absolute.c_str());
 
 	std::shared_ptr<stream_pusher> mediastream = 
 		std::make_shared<stream_pusher>();
 
-	int ret = mediastream->set_video(tid, ssrc, video_name, streaming_end_callback);
+	int ret = mediastream->set_video(tid, ssrc, video_name_absolute, streaming_end_callback);
 	if (ERR_CANNOT_OPEN_VIDEO == ret)
 	{
 		std::shared_ptr<media_core_message::resource_server_report_message> next_mess = 
@@ -349,9 +352,15 @@ int resource_server::deal_message(const connection conn, std::shared_ptr<loadbal
 	{
 		std::lock_guard<std::mutex> lk(_mediastreams_lock);
 		if (!_mediastreams.count(ssrc))
+		{
+			dzlog_info("insert ssrc %d", ssrc);
 			_mediastreams[ssrc] = mediastream;
+		}
 		else
+		{
+			dzlog_error("ssrc %d is duplicate", ssrc);
 			duplicate_ssrc = true;
+		}
 	}
 
 	if (duplicate_ssrc)

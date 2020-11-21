@@ -9,7 +9,7 @@ class loadbalance_ability : virtual public server
 public:
 	int	fresh_or_insert_loadbalance(const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load);
 	int	fresh_loadbalance(int sock);
-	virtual void shoting_loadbalance();
+	void shoting_loadbalance();
 
 	void set_loadbalance_map(uint32_t sid, uint32_t ip, uint16_t port, bool is_connect);
 	void set_loadbalance_map(std::vector<uint32_t> sid, std::vector<uint32_t> ip, std::vector<uint16_t> port, bool is_connect);

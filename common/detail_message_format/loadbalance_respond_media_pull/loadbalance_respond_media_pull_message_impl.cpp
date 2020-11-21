@@ -9,7 +9,7 @@
 
 namespace media_core_message
 {
-	int loadbalance_respond_media_menu_pull_message_impl::send_data_to(int sockfd)
+	int loadbalance_respond_media_pull_message_impl::send_data_to(int sockfd)
 	{
 		if (sockfd < 0) 
 		{
@@ -61,7 +61,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int loadbalance_respond_media_menu_pull_message_impl::full_data_remote(int sockfd, uint32_t tid)
+	int loadbalance_respond_media_pull_message_impl::full_data_remote(int sockfd, uint32_t tid)
 	{
 		uint16_t buffer[9];
 		int once = recv(sockfd, (uint8_t*)buffer, 18, MSG_WAITALL);
@@ -86,7 +86,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int loadbalance_respond_media_menu_pull_message_impl::full_data_direct(uint32_t tid, uint32_t ssrc, uint32_t length, uint32_t width, uint32_t ip, uint16_t server_send_port)
+	int loadbalance_respond_media_pull_message_impl::full_data_direct(uint32_t tid, uint32_t ssrc, uint32_t length, uint32_t width, uint32_t ip, uint16_t server_send_port)
 	{
 		_tid	= tid;
 		_ssrc	= ssrc;
@@ -99,7 +99,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	int loadbalance_respond_media_menu_pull_message_impl::give_me_data(uint32_t& tid, uint32_t& ssrc, uint32_t& length, uint32_t& width, uint32_t& ip, uint16_t& server_send_port)
+	int loadbalance_respond_media_pull_message_impl::give_me_data(uint32_t& tid, uint32_t& ssrc, uint32_t& length, uint32_t& width, uint32_t& ip, uint16_t& server_send_port)
 	{
 		tid		= _tid;
 		ssrc	= _ssrc;
@@ -112,7 +112,7 @@ namespace media_core_message
 		return 0;
 	}
 
-	void loadbalance_respond_media_menu_pull_message_impl::print_data()
+	void loadbalance_respond_media_pull_message_impl::print_data()
 	{
 		char ip_buffer[16] = { 0 };
 		snprintf(ip_buffer, 16, "%u.%u.%u.%u", (_ip & 0x000000ff), (_ip & 0x0000ff00) >> 8, (_ip & 0x00ff0000) >> 16, (_ip & 0xff000000) >> 24);
@@ -120,12 +120,12 @@ namespace media_core_message
 		dzlog_info("tid: %d, ssrc: %d, size(%d, %d), at: %s:%d", _tid, _ssrc, _length, _width, ip_buffer, _server_send_port);
 	}
 
-	void loadbalance_respond_media_menu_pull_message_impl::init()
+	void loadbalance_respond_media_pull_message_impl::init()
 	{
 		clear();
 	}
 
-	void loadbalance_respond_media_menu_pull_message_impl::clear()
+	void loadbalance_respond_media_pull_message_impl::clear()
 	{
 		_tid	= 0;
 		_ssrc	= 0;
@@ -135,12 +135,12 @@ namespace media_core_message
 		_server_send_port = 0;
 	}
 
-	loadbalance_respond_media_menu_pull_message_impl::loadbalance_respond_media_menu_pull_message_impl()
+	loadbalance_respond_media_pull_message_impl::loadbalance_respond_media_pull_message_impl()
 	{
 		clear();
 	}
 
-	loadbalance_respond_media_menu_pull_message_impl::~loadbalance_respond_media_menu_pull_message_impl()
+	loadbalance_respond_media_pull_message_impl::~loadbalance_respond_media_pull_message_impl()
 	{
 		clear();
 	}
