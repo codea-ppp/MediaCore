@@ -88,7 +88,7 @@ void resource_server::rolling()
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::rolling_loadbalance_map,	this));
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance_ability::shoting_loadbalance,		this));
 
-		std::this_thread::sleep_for(std::chrono::seconds(3));
+		std::this_thread::sleep_for(std::chrono::seconds(8));
 		swi_load();
 	}
 

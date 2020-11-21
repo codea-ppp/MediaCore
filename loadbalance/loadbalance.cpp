@@ -243,13 +243,6 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_media_
 
 int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_other_loadbalance_message> mess)
 {
-	const int id = conn.show_sockfd();
-	if (fresh_client(id) && fresh_loadbalance(id) && fresh_resource(id)) 
-	{
-		dzlog_error("get pull_other_loadbalance_message from unknown %s:%d", conn.show_ip(), conn.show_port());
-		return -1;
-	}
-
 	uint32_t tid;
 	mess->give_me_data(tid);
 
@@ -346,6 +339,8 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 
 int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_server_respond_media_pull_message> mess)
 {
+	dzlog_info("get respond of media pulling");
+
 	const int id = conn.show_sockfd();
 
 	uint32_t tid; 
@@ -389,6 +384,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 	temp->set_server_send_port(server_send_port);
 	next_mess->full_data_direct(tid, ssrc, length, width, client.show_ip_raw(), server_send_port);
 
+	dzlog_info("sending for next stage");
 	client.send_message(next_mess);
 
 	return 0;
@@ -597,10 +593,10 @@ uint32_t loadbalance::find_resource_least_load()
 uint32_t loadbalance::find_idle_ssrc()
 {
 	std::srand(std::time(0));
-	_ssrc_boundary = std::rand();
+	_ssrc_boundary = std::rand() % 9837;
 
 	while (_media_chain_map.count(_ssrc_boundary))
-		_ssrc_boundary = std::rand();
+		_ssrc_boundary = std::rand() % 9837;
 
 	return _ssrc_boundary;
 }
@@ -620,7 +616,7 @@ void loadbalance::shoting_and_rolling()
 
 		threadpool_instance::get_instance()->schedule(std::bind(&loadbalance::shoting_media_chain, this));
 		
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::this_thread::sleep_for(std::chrono::seconds(8));
 		server::swi_load();
 	}
 }

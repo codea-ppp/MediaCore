@@ -1,6 +1,7 @@
 #include "widget.h"
 #include "client.h"
 #include "ui_widget.h"
+#include "threadpool_instance.h"
 
 Widget* Widget::get_instance()
 {
@@ -20,7 +21,7 @@ int Widget::video_update_callback(std::shared_ptr<std::vector<std::string>> upda
 
 void Widget::_play(QListWidgetItem *item)
 {
-    client::get_instance()->play(item->text().toStdString());
+    threadpool_instance::get_instance()->schedule(std::bind(&client::play, client::get_instance(), item->text().toStdString()));
 }
 
 Widget::Widget(QWidget *parent)
