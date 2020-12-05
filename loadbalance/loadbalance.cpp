@@ -123,17 +123,13 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<client_pull
 
 	std::shared_ptr<media_chain> ptr;
 
-	{
-		std::lock(_client_map_lock, _resource_map_lock);
+	// 函数开始时候 fresh 的时候没有失败, 所以这里 id 是必然存在的
+	ptr = std::make_shared<media_chain>(ssrc, _client_map[client_sid], _resource_map[selected_resource_sid], video_2_play);
 
-		// 函数开始时候 fresh 的时候没有失败, 所以这里 id 是必然存在的
-		ptr = std::make_shared<media_chain>(ssrc, _client_map[client_sid], _resource_map[selected_resource_sid], video_2_play);
+	std::shared_ptr<loadbalance_pull_media_stream_message> next_mess = std::make_shared<loadbalance_pull_media_stream_message>();
+	next_mess->full_data_direct(tid, recv_port, ssrc, video_2_play);
 
-		std::shared_ptr<loadbalance_pull_media_stream_message> next_mess = std::make_shared<loadbalance_pull_media_stream_message>();
-		next_mess->full_data_direct(tid, recv_port, ssrc, video_2_play);
-
-		_resource_map[selected_resource_sid]->send_message(next_mess);
-	}
+	_resource_map[selected_resource_sid]->send_message(next_mess);
 
 	ptr->set_client_recv_port(recv_port);
 

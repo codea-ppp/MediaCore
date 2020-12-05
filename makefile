@@ -1,4 +1,4 @@
-export common_gcc_flags 	= -g3 -Wall -pthread
+export common_gcc_flags 	= -O3 -Wall -pthread
 export common_out_links 	= -lzlog -lboost_thread -lnet_message_listener -lmessage
 export common_server_links 	= -lserver -lability -ljsoncpp
 export stream_pusher_links 	= -lstream_pusher -lavutil -lavcodec -lavformat -lavdevice -lavfilter -lswscale	
