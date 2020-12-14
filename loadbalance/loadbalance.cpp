@@ -138,7 +138,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<client_pull
 	ptr->set_client_recv_port(recv_port);
 
 	{
-		std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+		std::scoped_lock lk(_media_chain_map_lock);
 		_media_chain_map[ssrc] = ptr;
 	}
 
@@ -231,7 +231,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_media_
 	std::vector<std::string> _videos;
 
 	{
-		std::lock_guard<std::mutex> lk(_video_resources_lock);
+		std::scoped_lock lk(_video_resources_lock);
 		for (auto i = _video_resources.begin(); i != _video_resources.end(); ++i)
 			_videos.push_back(i->first);
 	}
@@ -253,7 +253,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<pull_other_
 	std::vector<uint16_t> ports;
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+		std::scoped_lock lk(_loadbalance_map_lock);
 
 		for (auto i = _loadbalance_map.begin(); i != _loadbalance_map.end(); ++i)
 		{
@@ -288,14 +288,14 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<push_media_
 	mess->give_me_data(tid, video_names);
 
 	{
-		std::lock_guard<std::mutex> lk(_video_resources_lock);
+		std::scoped_lock lk(_video_resources_lock);
 
 		for (auto i = video_names.begin(); i != video_names.end(); ++i)
 		{
 			if (_video_resources.count(*i) && _video_resources[*i].count(id))
 				continue;
 
-			std::lock_guard<std::mutex> lk(_resource_map_lock);
+			std::scoped_lock lk(_resource_map_lock);
 			_video_resources[*i][id] = _resource_map[sid];
 		}
 	}
@@ -325,7 +325,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 	}
 
 	{
-		std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+		std::scoped_lock lk(_media_chain_map_lock);
 		if (!_media_chain_map.count(ssrc))
 			return 0;
 
@@ -369,7 +369,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<resource_se
 	std::shared_ptr<media_chain> temp;
 
 	{
-		std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+		std::scoped_lock lk(_media_chain_map_lock);
 		if (!_media_chain_map.count(ssrc)) 
 		{
 			dzlog_error("media chain donnot have %d", ssrc);
@@ -429,14 +429,14 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<respond_med
 	mess->give_me_data(tid, video_names);
 
 	{
-		std::lock_guard<std::mutex> lk(_video_resources_lock);
+		std::scoped_lock lk(_video_resources_lock);
 
 		for (auto i = video_names.begin(); i != video_names.end(); ++i)
 		{
 			if (_video_resources.count(*i) && _video_resources[*i].count(id))
 				continue;
 
-			std::lock_guard<std::mutex> lk(_resource_map_lock);
+			std::scoped_lock lk(_resource_map_lock);
 			_video_resources[*i][id] = _resource_map[sid];
 
 			dzlog_info("get video: %s", i->c_str());
@@ -458,7 +458,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<stop_stream
 	if (!fresh_client(id)) 
 	{
 		{
-			std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+			std::scoped_lock lk(_media_chain_map_lock);
 			if (!_media_chain_map.count(ssrc))
 			{
 				dzlog_error("ssrc %d not exist", ssrc);
@@ -475,7 +475,7 @@ int loadbalance::deal_message(const connection conn, std::shared_ptr<stop_stream
 	else if (!fresh_resource(id))
 	{
 		{
-			std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+			std::scoped_lock lk(_media_chain_map_lock);
 			if (!_media_chain_map.count(ssrc))
 			{
 				dzlog_error("ssrc %d not exist", ssrc);
@@ -510,7 +510,7 @@ int loadbalance::send_new_loadbalance_2_client_resource(uint32_t sid, const conn
 	mess->full_data_direct(get_tid(), sids, ip, port);
 
 	{
-		std::lock_guard<std::mutex> lk(_client_map_lock);
+		std::scoped_lock lk(_client_map_lock);
 		for (auto i = _client_map.begin(); i != _client_map.end(); ++i)
 		{
 			dzlog_info("send new loadbalance(%s:%d) to client(%s:%d)", lb.show_ip(), lb.show_port(), i->second->get_connection().show_ip(), i->second->get_connection().show_port());
@@ -520,7 +520,7 @@ int loadbalance::send_new_loadbalance_2_client_resource(uint32_t sid, const conn
 	}
 
 	{
-		std::lock_guard<std::mutex> lk(_resource_map_lock);
+		std::scoped_lock lk(_resource_map_lock);
 		for (auto i = _resource_map.begin(); i != _resource_map.end(); ++i)
 		{
 			dzlog_info("send new loadbalance(%s:%d) to client(%s:%d)", lb.show_ip(), lb.show_port(), i->second->get_connection().show_ip(), i->second->get_connection().show_port());
@@ -545,7 +545,7 @@ int loadbalance::send_media_menu_pulling(const connection resource)
 
 int loadbalance::check_video_and_find_resource_least_load(const std::string& video)
 {
-	std::lock_guard<std::mutex> lk(_video_resources_lock);
+	std::scoped_lock lk(_video_resources_lock);
 	if (!_video_resources.count(video))
 	{
 		dzlog_error("not video: %s", video.c_str());
@@ -576,7 +576,7 @@ uint32_t loadbalance::find_resource_least_load()
 	uint32_t temp_load	= 0;
 	uint32_t resource_id = -1;
 
-	std::lock_guard<std::mutex> lk(_resource_map_lock);
+	std::scoped_lock lk(_resource_map_lock);
 	for (auto i = _resource_map.begin(); i != _resource_map.end(); ++i)
 	{
 		temp_load = i->second->get_load();
@@ -623,7 +623,7 @@ void loadbalance::shoting_and_rolling()
 
 void loadbalance::shoting_media_chain()
 {
-	std::lock_guard<std::mutex> lk(_media_chain_map_lock);
+	std::scoped_lock lk(_media_chain_map_lock);
 	for (auto i = _media_chain_map.begin(); i != _media_chain_map.end(); ++i)
 	{
 		if (i->second->is_expires())

@@ -58,7 +58,7 @@ void client::play(const std::string& video)
 	uint32_t tid = get_tid();
 
 	{
-		std::lock_guard<std::mutex> lk(_tid_2_media_lock);
+		std::scoped_lock lk(_tid_2_media_lock);
 		_tid_2_media[tid] = video;
 	}
 
@@ -69,7 +69,7 @@ void client::play(const std::string& video)
 	int min_load		= INT_MAX;
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+		std::scoped_lock lk(_loadbalance_map_lock);
 		for (auto i = _loadbalance_map.begin(); i != _loadbalance_map.end(); ++i)
 		{
 			currnet_load = i->second->get_load();
@@ -132,7 +132,7 @@ void client::rolling_pulling_videos()
 
 	mess->full_data_direct(get_tid());
 
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+	std::scoped_lock lk(_loadbalance_map_lock);
 	for (auto i = _loadbalance_map.begin(); i != _loadbalance_map.end(); ++i)
 	{
 		connection conn = i->second->get_connection();
@@ -201,7 +201,7 @@ int client::deal_message(const connection conn, std::shared_ptr<loadbalance_resp
 	std::string video;
 
 	{
-		std::lock_guard<std::mutex> lk(_tid_2_media_lock);
+		std::scoped_lock lk(_tid_2_media_lock);
 		if (!_tid_2_media.count(tid))
 		{
 			dzlog_error("video for tid %d not found", tid);
@@ -214,7 +214,7 @@ int client::deal_message(const connection conn, std::shared_ptr<loadbalance_resp
 	std::shared_ptr<stream_render> mediastream = std::make_shared<stream_render>(video, length, width);
 
 	{
-		std::lock_guard<std::mutex> lk(_mediastreams_lock);
+		std::scoped_lock lk(_mediastreams_lock);
 		if (_mediastreams.count(ssrc))
 		{
 			dzlog_error("ssrc %d already exist", ssrc);
@@ -302,7 +302,7 @@ int client::deal_message(const connection conn, std::shared_ptr<respond_media_me
 	mess->give_me_data(tid, video_names);
 
 	{
-		std::lock_guard<std::mutex> lk(_videos_lock);
+		std::scoped_lock lk(_videos_lock);
 		for (auto i = video_names.begin(); i != video_names.end(); ++i)
 		{
 			if (_videos.count(*i)) continue;
@@ -329,7 +329,7 @@ int client::deal_message(const connection conn, std::shared_ptr<stop_stream_mess
 	uint32_t tid, ssrc;
 	mess->give_me_data(tid, ssrc);
 
-	std::lock_guard<std::mutex> lk(_mediastreams_lock);
+	std::scoped_lock lk(_mediastreams_lock);
 	if (!_mediastreams.count(ssrc))
 	{
 		dzlog_error("there is no ssrc: %d", ssrc);

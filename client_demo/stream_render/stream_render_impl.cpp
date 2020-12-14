@@ -88,6 +88,7 @@ void stream_render_impl::_rendering(const connection conn)
 	switch(_sdl_event.type)
 	{
 		case SDL_QUIT:
+			dzlog_info("rending finished");
 			clear();
 			return;
 

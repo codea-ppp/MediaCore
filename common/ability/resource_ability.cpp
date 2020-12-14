@@ -18,7 +18,7 @@
 int resource_ability::fresh_or_insert_resource(const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
 {
 	const int sock = conn.show_sockfd();
-	std::lock_guard<std::mutex> lk(_resource_map_lock);
+	std::scoped_lock lk(_resource_map_lock);
 
 	if (_resource_map.count(sid))
 	{
@@ -47,7 +47,7 @@ int resource_ability::fresh_resource(int sock)
 	uint32_t sid = resource_sockfd_2_sid(sock);
 
 	{
-		std::lock_guard<std::mutex> lk(_resource_map_lock);
+		std::scoped_lock lk(_resource_map_lock);
 
 		if (!_resource_map.count(sid))
 		{
@@ -65,7 +65,7 @@ void resource_ability::shoting_resource()
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
-	std::lock_guard<std::mutex> lk(_resource_map_lock);
+	std::scoped_lock lk(_resource_map_lock);
 	dzlog_info("shoting %ld resource", _resource_map.size());
 
 	for (auto i = _resource_map.begin(); i != _resource_map.end(); )
@@ -91,7 +91,7 @@ void resource_ability::set_resource_map(uint32_t sid, uint32_t ip, uint16_t port
 	std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, port);
 	std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
 
-	std::lock_guard<std::mutex> lk(_resource_2_is_connect_map_lock);
+	std::scoped_lock lk(_resource_2_is_connect_map_lock);
 	_resource_2_is_connect_map[k] = v;
 }
 
@@ -106,7 +106,7 @@ void resource_ability::set_new_resource_map(uint32_t sid, uint32_t ip, uint16_t 
 		if (*i == ip) return;
 	}
 
-	std::lock_guard<std::mutex> lk(_resource_2_is_connect_map_lock);
+	std::scoped_lock lk(_resource_2_is_connect_map_lock);
 	if (!_resource_2_is_connect_map.count(k)) return;
 	_resource_2_is_connect_map[k] = v;
 }
@@ -115,7 +115,7 @@ void resource_ability::erase_resource_map(uint32_t ip, uint16_t port)
 {
 	std::pair<uint32_t, uint16_t> k = std::make_pair(ip, port);
 
-	std::lock_guard<std::mutex> lk(_resource_2_is_connect_map_lock);
+	std::scoped_lock lk(_resource_2_is_connect_map_lock);
 	if (!_resource_2_is_connect_map.count(k))
 		return;
 
@@ -128,7 +128,7 @@ void resource_ability::rolling_resource_map()
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
-		std::lock_guard<std::mutex> lk(_resource_2_is_connect_map_lock);
+		std::scoped_lock lk(_resource_2_is_connect_map_lock);
 
 		for (auto i = _resource_2_is_connect_map.begin(); i != _resource_2_is_connect_map.end(); ++i)
 		{
@@ -179,7 +179,7 @@ void resource_ability::rolling_resource_map()
 int resource_ability::resource_sockfd_2_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{
@@ -194,7 +194,7 @@ int resource_ability::resource_sockfd_2_sid(int sock)
 int resource_ability::insert_resource_sock_sid(int sock, uint32_t sid)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (_sock_2_sid.count(sock))
 		{
@@ -212,7 +212,7 @@ int resource_ability::insert_resource_sock_sid(int sock, uint32_t sid)
 int resource_ability::remove_resource_sock_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{

@@ -19,7 +19,7 @@ int loadbalance_ability::fresh_or_insert_loadbalance(const connection conn, cons
 {
 	const int sock = conn.show_sockfd();
 
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+	std::scoped_lock lk(_loadbalance_map_lock);
 
 	if (_loadbalance_map.count(sid))
 	{
@@ -50,7 +50,7 @@ int loadbalance_ability::fresh_loadbalance(int sock)
 		return -1;
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+		std::scoped_lock lk(_loadbalance_map_lock);
 
 		if (!_loadbalance_map.count(sid))
 		{
@@ -65,7 +65,7 @@ int loadbalance_ability::fresh_loadbalance(int sock)
 
 void loadbalance_ability::shoting_loadbalance()
 {
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+	std::scoped_lock lk(_loadbalance_map_lock);
 
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
@@ -101,13 +101,13 @@ void loadbalance_ability::set_loadbalance_map(uint32_t sid, uint32_t ip, uint16_
 	std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, port);
 	std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
 
-	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+	std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 	_loadbalance_2_is_connect_map[k] = v;
 }
 
 void loadbalance_ability::set_loadbalance_map(std::vector<uint32_t> sids, std::vector<uint32_t> ips, std::vector<uint16_t> ports, bool is_connect)
 {
-	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+	std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 
 	for (unsigned int i = 0; i < sids.size(); ++i)
 	{
@@ -137,14 +137,14 @@ void loadbalance_ability::set_new_loadbalance_map(uint32_t sid, uint32_t ip, uin
 		if (*i == ip) return;
 	}
 
-	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+	std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 	if (_loadbalance_2_is_connect_map.count(k)) return;
 	_loadbalance_2_is_connect_map[k] = v;
 }
 
 void loadbalance_ability::set_new_loadbalance_map(std::vector<uint32_t> sids, std::vector<uint32_t> ips, std::vector<uint16_t> ports, bool is_connect)
 {
-	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+	std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 
 	for (unsigned int i = 0; i < sids.size(); ++i)
 	{
@@ -180,7 +180,7 @@ void loadbalance_ability::erase_loadbalance_map(uint32_t ip, uint16_t port)
 {
 	std::pair<uint32_t, uint16_t> k = std::make_pair(ip, port);
 
-	std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+	std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 	if (!_loadbalance_2_is_connect_map.count(k))
 		return;
 
@@ -193,7 +193,7 @@ void loadbalance_ability::rolling_loadbalance_map()
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_2_is_connect_map_lock);
+		std::scoped_lock lk(_loadbalance_2_is_connect_map_lock);
 
 		for (auto i = _loadbalance_2_is_connect_map.begin(); i != _loadbalance_2_is_connect_map.end(); ++i)
 		{
@@ -240,7 +240,7 @@ void loadbalance_ability::rolling_loadbalance_map()
 int loadbalance_ability::loadbalance_sockfd_2_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{
@@ -254,7 +254,7 @@ int loadbalance_ability::loadbalance_sockfd_2_sid(int sock)
 
 int loadbalance_ability::loadbalance_sockfd_2_sid(std::vector<uint32_t>& lbsids, const std::vector<uint32_t>& lbfds)
 {
-	std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+	std::scoped_lock lk(_sock_2_sid_lock);
 	for (auto i = lbfds.begin(); i != lbfds.end(); ++i)
 	{
 		if (!_sock_2_sid.count(*i))
@@ -272,7 +272,7 @@ int loadbalance_ability::loadbalance_sockfd_2_sid(std::vector<uint32_t>& lbsids,
 int loadbalance_ability::insert_loadbalance_sock_sid(int sock, uint32_t sid)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (_sock_2_sid.count(sock))
 		{
@@ -290,7 +290,7 @@ int loadbalance_ability::insert_loadbalance_sock_sid(int sock, uint32_t sid)
 int loadbalance_ability::remove_loadbalance_sock_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{

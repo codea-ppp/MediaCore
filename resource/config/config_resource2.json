@@ -1,0 +1,12 @@
+{
+    "sid": 33554434,
+    "port": 12027,
+    "video_path": "/home/codea/Documents/CDUT/Subjects/软件工程/MediaCore/resource/videos/",
+    "loadbalance": [
+        {
+            "sid": 16777216,
+            "ip": "127.0.0.1",
+            "port": 26120
+        }
+    ]
+}

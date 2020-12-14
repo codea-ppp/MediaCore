@@ -110,7 +110,7 @@ void resource_server::rolling_videos()
 
 	std::string temp;
 
-	std::lock_guard<std::mutex> lk(_video_mutex);
+	std::scoped_lock lk(_video_mutex);
 
 	while (n--) 
 	{
@@ -145,7 +145,7 @@ void resource_server::rolling_mediapushing_expires()
 {
 	std::shared_ptr<std::vector<uint32_t>> expires_ssrc = std::make_shared<std::vector<uint32_t>>();
 
-	std::lock_guard<std::mutex> lk(_mediastreams_lock);
+	std::scoped_lock lk(_mediastreams_lock);
 	for (auto i = _mediastreams.begin(); i != _mediastreams.end(); ++i)
 	{
 		if (i->second->is_expires())
@@ -164,7 +164,7 @@ void resource_server::send_new_video_to_all_lb(std::shared_ptr<std::vector<std::
 		std::make_shared<push_media_pull_message>();
 	mess->full_data_direct(get_tid(), *new_videos);
 
-	std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+	std::scoped_lock lk(_loadbalance_map_lock);
 	for (auto i = _loadbalance_map.begin(); i != _loadbalance_map.end(); ++i)
 	{
 		connection conn = i->second->get_connection();
@@ -183,7 +183,7 @@ void resource_server::send_media_chains_expires(std::shared_ptr<std::vector<uint
 	mess->full_data_direct(get_tid(), 5);
 
 	{
-		std::lock_guard<std::mutex> lk(_ssrc_2_lbfd_lock);
+		std::scoped_lock lk(_ssrc_2_lbfd_lock);
 
 		for (auto i = expires_ssrc->begin(); i != expires_ssrc->end(); ++i)
 		{
@@ -200,7 +200,7 @@ void resource_server::send_media_chains_expires(std::shared_ptr<std::vector<uint
 	loadbalance_sockfd_2_sid(lbsids, lbfds);
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+		std::scoped_lock lk(_loadbalance_map_lock);
 		
 		for (auto i = lbsids.begin(); i != lbsids.end(); ++i)
 		{
@@ -225,7 +225,7 @@ void resource_server::send_streaming_end(uint32_t ssrc)
 	uint32_t lbfd;
 	
 	{
-		std::lock_guard<std::mutex> lk(_ssrc_2_lbfd_lock);
+		std::scoped_lock lk(_ssrc_2_lbfd_lock);
 		if (!_ssrc_2_lbfd.count(ssrc))
 		{
 			dzlog_error("lb for ssrc: %d not exist", ssrc);
@@ -243,7 +243,7 @@ void resource_server::send_streaming_end(uint32_t ssrc)
 	}
 
 	{
-		std::lock_guard<std::mutex> lk(_loadbalance_map_lock);
+		std::scoped_lock lk(_loadbalance_map_lock);
 		if (!_loadbalance_map.count(lbsid))
 		{
 			dzlog_error("cannot find lb by sid %d", lbsid);
@@ -264,7 +264,7 @@ resource_server::~resource_server()
 
 	net_message_listener::get_instance()->stop();
 
-	std::lock_guard<std::mutex> lk(_mediastreams_lock);
+	std::scoped_lock lk(_mediastreams_lock);
 	for (auto i = _mediastreams.begin(); i != _mediastreams.end(); ++i)
 	{
 		i->second->stop();
@@ -350,7 +350,7 @@ int resource_server::deal_message(const connection conn, std::shared_ptr<loadbal
 	bool duplicate_ssrc = false;
 
 	{
-		std::lock_guard<std::mutex> lk(_mediastreams_lock);
+		std::scoped_lock lk(_mediastreams_lock);
 		if (!_mediastreams.count(ssrc))
 		{
 			dzlog_info("insert ssrc %d", ssrc);
@@ -394,7 +394,7 @@ int resource_server::deal_message(const connection conn, std::shared_ptr<pull_me
 		std::make_shared<media_core_message::respond_media_menu_pull_message>();
 
 	{
-		std::lock_guard<std::mutex> lk(_video_mutex);
+		std::scoped_lock lk(_video_mutex);
 		next_mess->full_data_direct(tid, _videos);
 	}
 
@@ -447,7 +447,7 @@ int resource_server::deal_message(const connection conn, std::shared_ptr<stop_st
 
 	mess->give_me_data(tid, ssrc);
 
-	std::lock_guard<std::mutex> lk(_mediastreams_lock);
+	std::scoped_lock lk(_mediastreams_lock);
 	if (_mediastreams.count(ssrc))
 	{
 		dzlog_error("cannot find ssrc %d", ssrc);

@@ -160,7 +160,7 @@ namespace media_core_message
 
 		_tid = tid;
 
-		dzlog_info("get YUV(%d, %d, %d)", _y_length, _u_length, _v_length);
+//		dzlog_info("get YUV(%d, %d, %d)", _y_length, _u_length, _v_length);
 		return 0;
 	}
 
@@ -175,7 +175,7 @@ namespace media_core_message
 		_height = height;
 		_tid	= tid;
 
-		dzlog_info("set YUV(%d, %d, %d)", _y_length, _u_length, _v_length);
+//		dzlog_info("set YUV(%d, %d, %d)", _y_length, _u_length, _v_length);
 
 		if (YUV[0] != nullptr)
 		{

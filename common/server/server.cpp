@@ -73,7 +73,7 @@ int server::get_ssrc(int which, int sid, uint32_t tid)
 {
 	std::pair<int, int> key = std::make_pair(sid, tid);
 
-	std::lock_guard<std::mutex> lk(_sid_tid_2_ssrc_lock[which]);
+	std::scoped_lock lk(_sid_tid_2_ssrc_lock[which]);
 	if (!_sid_tid_2_ssrc[which].count(key))
 		return -1;
 
@@ -84,7 +84,7 @@ int server::insert_id_tid_2_ssrc(int which, int sid, uint32_t tid, uint32_t ssrc
 {
 	std::pair<int, int> key = std::make_pair(sid, tid);
 
-	std::lock_guard<std::mutex> lk(_sid_tid_2_ssrc_lock[which]);
+	std::scoped_lock lk(_sid_tid_2_ssrc_lock[which]);
 	if (_sid_tid_2_ssrc[which].count(key))
 	{
 		dzlog_error("[sid, tid](%d, %d) already exist", sid, tid);
@@ -99,7 +99,7 @@ int server::remove_id_tid_2_ssrc(int which, int sid, uint32_t tid)
 {
 	std::pair<int, int> key = std::make_pair(sid, tid);
 
-	std::lock_guard<std::mutex> lk(_sid_tid_2_ssrc_lock[which]);
+	std::scoped_lock lk(_sid_tid_2_ssrc_lock[which]);
 	if (!_sid_tid_2_ssrc[which].count(key))
 	{
 		dzlog_info("[sid, tid](%d, %d) not exist", sid, tid);

@@ -121,7 +121,7 @@ connection_impl::~connection_impl()
 
 void connection_impl::_rolling(std::shared_ptr<media_core_message::message> mess)
 {
-	std::lock_guard<std::mutex> lk(message_sending_lock);
+	std::scoped_lock lk(message_sending_lock);
 
 	if (mess->send_data_to(_sockfd))	
 		dzlog_error("send message failed: %d", errno);

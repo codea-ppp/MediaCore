@@ -18,7 +18,7 @@
 int client_ability::fresh_or_insert_client(const connection conn, const uint32_t sid, const uint16_t listening_port, const uint32_t load)
 {
 	const int sock = conn.show_sockfd();
-	std::lock_guard<std::mutex> lk(_client_map_lock);
+	std::scoped_lock lk(_client_map_lock);
 
 	if (_client_map.count(sid))
 	{
@@ -45,7 +45,7 @@ int client_ability::fresh_or_insert_client(const connection conn, const uint32_t
 int client_ability::fresh_client(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_client_map_lock);
+		std::scoped_lock lk(_client_map_lock);
 
 		uint32_t sid = client_sockfd_2_sid(sock);
 		if (!_client_map.count(sid))
@@ -66,7 +66,7 @@ void client_ability::shoting_client()
 	std::shared_ptr<keepalive_message> mess = std::make_shared<keepalive_message>();
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
-	std::lock_guard<std::mutex> lk(_client_map_lock);
+	std::scoped_lock lk(_client_map_lock);
 
 	dzlog_info("shoting %ld client", _client_map.size());
 
@@ -94,7 +94,7 @@ void client_ability::set_client_map(uint32_t sid, uint32_t ip, uint16_t port, bo
 	std::pair<uint32_t, uint16_t>	k = std::make_pair(ip, port);
 	std::pair<bool, uint32_t>		v = std::make_pair(is_connect, sid);
 
-	std::lock_guard<std::mutex> lk(_client_2_is_connect_map_lock);
+	std::scoped_lock lk(_client_2_is_connect_map_lock);
 	_client_2_is_connect_map[k] = v;
 }
 
@@ -109,7 +109,7 @@ void client_ability::set_new_client_map(uint32_t sid, uint32_t ip, uint16_t port
 		if (*i == ip) return;
 	}
 
-	std::lock_guard<std::mutex> lk(_client_2_is_connect_map_lock);
+	std::scoped_lock lk(_client_2_is_connect_map_lock);
 	if (!_client_2_is_connect_map.count(k)) return;
 	_client_2_is_connect_map[k] = v;
 }
@@ -118,7 +118,7 @@ void client_ability::erase_client_map(uint32_t ip, uint16_t port)
 {
 	std::pair<uint32_t, uint16_t> k = std::make_pair(ip, port);
 
-	std::lock_guard<std::mutex> lk(_client_2_is_connect_map_lock);
+	std::scoped_lock lk(_client_2_is_connect_map_lock);
 	if (!_client_2_is_connect_map.count(k))
 		return;
 
@@ -131,7 +131,7 @@ void client_ability::rolling_client_map()
 	mess->full_data_direct(get_tid(), _sid, _self_port, get_load());
 
 	{
-		std::lock_guard<std::mutex> lk(_client_2_is_connect_map_lock);
+		std::scoped_lock lk(_client_2_is_connect_map_lock);
 
 		for (auto i = _client_2_is_connect_map.begin(); i != _client_2_is_connect_map.end(); ++i)
 		{
@@ -180,7 +180,7 @@ void client_ability::rolling_client_map()
 int client_ability::client_sockfd_2_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{
@@ -195,7 +195,7 @@ int client_ability::client_sockfd_2_sid(int sock)
 int client_ability::insert_client_sock_sid(int sock, uint32_t sid)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (_sock_2_sid.count(sock))
 		{
@@ -213,7 +213,7 @@ int client_ability::insert_client_sock_sid(int sock, uint32_t sid)
 int client_ability::remove_client_sock_sid(int sock)
 {
 	{
-		std::lock_guard<std::mutex> lk(_sock_2_sid_lock);
+		std::scoped_lock lk(_sock_2_sid_lock);
 
 		if (!_sock_2_sid.count(sock))
 		{
