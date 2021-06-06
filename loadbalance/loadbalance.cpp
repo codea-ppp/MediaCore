@@ -5,9 +5,10 @@
 #include <unistd.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
-#include <sys/types.h>
 #include <netinet/in.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+
 #include "loadbalance.h"
 #include "message_headers.h"
 #include "threadpool_instance.h"
